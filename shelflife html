@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Board game collection &middot; Sankey</title>
+<style>
+:root{
+  --bg:#141F19;
+  --surface:#1B2921;
+  --border-soft:#2A392F;
+  --text:#ECE6D6;
+  --text-dim:#9CA79A;
+  --text-faint:#6B7A6E;
+  --coral:#D2694B;
+  --gold:#D9A544;
+  --grey-node:#5B6B60;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);}
+.page{
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  padding:40px 32px 56px;
+  max-width:1040px;
+  margin:0 auto;
+}
+.header{margin-bottom:28px;}
+.eyebrow{
+  font-size:12px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--text-faint);
+  margin-bottom:10px;
+}
+h1{
+  font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+  font-weight:400;
+  font-size:34px;
+  margin:0 0 10px;
+  color:var(--text);
+}
+.subtitle{
+  font-size:14px;
+  color:var(--text-dim);
+  max-width:620px;
+  line-height:1.6;
+}
+.chart-wrap{
+  background:var(--surface);
+  border:0.5px solid var(--border-soft);
+  border-radius:14px;
+  padding:24px;
+}
+.legend{
+  display:flex;
+  gap:24px;
+  margin-top:18px;
+  font-size:12px;
+  color:var(--text-dim);
+  flex-wrap:wrap;
+}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+.grad-swatch{width:26px;height:9px;border-radius:3px;display:inline-block;background:linear-gradient(90deg,#C9E7C2,#154D1B);}
+.node-label{font-size:13px;fill:var(--text);font-weight:600;}
+.node-value{font-size:12px;fill:var(--text-dim);}
+.outliers{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+  margin-top:14px;
+}
+.outlier-card{
+  background:var(--surface);
+  border:0.5px solid var(--border-soft);
+  border-radius:14px;
+  padding:20px 22px 22px;
+}
+.outlier-title{
+  font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+  font-size:16px;
+  color:var(--text);
+  margin:0 0 2px;
+}
+.outlier-sub{font-size:12px;color:var(--text-dim);margin-bottom:14px;}
+.outlier-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:7px 0;
+  border-top:0.5px solid var(--border-soft);
+  font-size:13px;
+}
+.outlier-row:first-of-type{border-top:none;}
+.outlier-badge{
+  flex-shrink:0;
+  width:22px;height:22px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:"SFMono-Regular",Consolas,monospace;
+  font-size:11px;font-weight:600;
+}
+@media (max-width:640px){
+  .outliers{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="eyebrow">Board game collection &middot; lifecycle</div>
+    <h1>From the shelf to sold</h1>
+    <div class="subtitle">140 Spiele, als Fluss von ungespielt &rarr; gespielt &rarr; weitergewandert oder behalten. Farbe zeigt den Pfad: Rot = direkt weitergewandert, Gelb = direkt behalten, Gr&uuml;n = gespielt &rarr; behalten, Orange = gespielt &rarr; weitergewandert &mdash; jeweils zus&auml;tzlich nach BGG-Rating gestuft.</div>
+  </div>
+  <div class="chart-wrap">
+    <svg id="sankey" width="100%"></svg>
+    <div class="legend">
+      <span><span class="dot" style="background:#5B6B60"></span>Ungespielt</span>
+      <span><span class="dot" style="background:#D64545"></span>Weitergewandert, direkt (ungespielt)</span>
+      <span><span class="dot" style="background:#E3C23A"></span>Behalten, direkt (ungespielt)</span>
+      <span><span class="grad-swatch"></span>Gespielt &amp; Behalten (gespielt) &middot; Rating (gr&uuml;n)</span>
+      <span><span class="grad-swatch" style="background:linear-gradient(90deg,#F5D9B0,#7A3F0E)"></span>Weitergewandert (gespielt) &middot; Rating (orange)</span>
+    </div>
+  </div>
+
+  <div class="outliers">
+    <div class="outlier-card">
+      <div class="outlier-title">Behalten trotz Rating &le; 6</div>
+      <div class="outlier-sub">8 Spiele &middot; gespielt, aber h&ouml;chstens mittelm&auml;&szlig;ig bewertet und trotzdem nicht weitergewandert</div>
+      <div class="outlier-row"><span class="outlier-badge" style="background:#AEDCA3;color:#173813">4</span>The Everrain (German edition)</div>
+      <div class="outlier-row"><span class="outlier-badge" style="background:#AEDCA3;color:#173813">4</span>Mitternachtsparty</div>
+      <div class="outlier-row"><span class="outlier-badge" style="background:#8FCE82;color:#173813">5</span>Der Kartograph: Ein Spiel im Roll Player Universum</div>
+      <div class="outlier-row"><span class="outlier-badge" style="background:#8FCE82;color:#173813">5</span>Waldschattenspiel</div>
+      <div class="outlier-row"><span class="outlier-badge" style="background:#6EBE62;color:#173813">6</span>Dixit (German edition)</div>
+      <div class="outlier-row"><span class="outlier-badge" style="background:#6EBE62;color:#173813">6</span>Lotti Karotti</div>
+      <div class="outlier-row"><span class="outlier-badge" style="background:#6EBE62;color:#173813">6</span>Unmatched: Cobble &amp; Fog (German edition)</div>
+      <div class="outlier-row"><span class="outlier-badge" style="background:#6EBE62;color:#173813">6</span>Unmatched: Kampf der Legenden, Kapitel 1</div>
+    </div>
+    <div class="outlier-card">
+      <div class="outlier-title">Weitergewandert trotz Rating &ge; 7</div>
+      <div class="outlier-sub">8 Spiele &middot; gespielt, hoch bewertet, trotzdem weitergewandert</div>
+      <div class="outlier-row"><span class="outlier-badge" style="background:#C06A1D;color:#F1FAEE">8</span>The King&rsquo;s Dilemma (German edition)</div>
+      <div class="outlier-row"><span class="outlier-badge" style="background:#D9822B;color:#F1FAEE">7</span>Eclipse: Das zweite galaktische Zeitalter</div>
+      <div class="outlier-row"><span class="outlier-badge" style="background:#D9822B;color:#F1FAEE">7</span>Power Plants (German edition)</div>
+      <div class="outlier-row"><span class="outlier-badge" style="background:#D9822B;color:#F1FAEE">7</span>Schlafende G&ouml;tter</div>
+      <div class="outlier-row"><span class="outlier-badge" style="background:#D9822B;color:#F1FAEE">7</span>Scythe (German second edition)</div>
+      <div class="outlier-row"><span class="outlier-badge" style="background:#D9822B;color:#F1FAEE">7</span>Tapestry (German edition)</div>
+      <div class="outlier-row"><span class="outlier-badge" style="background:#D9822B;color:#F1FAEE">7</span>Weimar: Der Kampf um die Demokratie</div>
+      <div class="outlier-row"><span class="outlier-badge" style="background:#D9822B;color:#F1FAEE">7</span>Zug um Zug Legacy: Legenden des Westens</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-sankey/0.12.3/d3-sankey.min.js"></script>
+<script>
+const width = 960, height = 500;
+const margin = {top: 50, right: 24, bottom: 24, left: 24};
+const innerW = width - margin.left - margin.right;
+const innerH = height - margin.top - margin.bottom;
+
+const nodesData = [
+  {name: "Ungespielt", sortOrder: 0},
+  {name: "Gespielt", sortOrder: 0},
+  {name: "Weitergewandert (ungespielt)", sortOrder: 3},
+  {name: "Weitergewandert (gespielt)", sortOrder: 2},
+  {name: "Behalten (gespielt)", sortOrder: 1},
+  {name: "Behalten (ungespielt)", sortOrder: 0}
+];
+const linksData = [
+  {source: 0, target: 2, value: 28},
+  {source: 0, target: 1, value: 93},
+  {source: 0, target: 5, value: 19},
+  {source: 1, target: 3, value: 36},
+  {source: 1, target: 4, value: 57}
+];
+
+const sankeyGen = d3.sankey()
+  .nodeWidth(16)
+  .nodePadding(32)
+  .nodeSort((a, b) => a.sortOrder - b.sortOrder)
+  .extent([[0, 0], [innerW, innerH]]);
+
+const graph = sankeyGen({
+  nodes: nodesData.map(d => Object.assign({}, d)),
+  links: linksData.map(d => Object.assign({}, d))
+});
+
+const svg = d3.select('#sankey').attr('viewBox', `0 0 ${width} ${height}`);
+const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+const RED = '#D64545';
+const YELLOW = '#E3C23A';
+const nodeColor = name => {
+  if (name === 'Weitergewandert (ungespielt)') return RED;
+  if (name === 'Behalten (ungespielt)') return YELLOW;
+  return '#5B6B60';
+};
+const totalGames = 140;
+const greenByRating = {3: '#C9E7C2', 4: '#AEDCA3', 5: '#8FCE82', 6: '#6EBE62', 7: '#4CA84A', 8: '#348A38', 9: '#236B29', 10: '#154D1B'};
+const orangeByRating = {3: '#F5D9B0', 4: '#F0C48D', 5: '#EBB06B', 6: '#E39A47', 7: '#D9822B', 8: '#C06A1D', 9: '#A05515', 10: '#7A3F0E'};
+const textColorFor = r => r <= 6 ? '#173813' : '#F1FAEE';
+const ratingOrder = [10, 9, 8, 7, 6, 5, 4, 3];
+
+// BGG-Rating-Verteilung der 93 gespielten Spiele (Chess ohne Rating -> 7), aufgeteilt nach Ausgang
+const totalByRating = {10: 6, 9: 9, 8: 19, 7: 23, 6: 14, 5: 8, 4: 9, 3: 5};
+const groupB = {8: 1, 7: 7, 6: 10, 5: 6, 4: 7, 3: 5};       // gespielt, dann verkauft (n=36)
+const groupC = {10: 6, 9: 9, 8: 18, 7: 16, 6: 4, 5: 2, 4: 2}; // gespielt, dann behalten (n=57)
+
+const ungespieltNode = graph.nodes.find(n => n.name === 'Ungespielt');
+const gespieltNode = graph.nodes.find(n => n.name === 'Gespielt');
+const verkauftGNode = graph.nodes.find(n => n.name === 'Weitergewandert (gespielt)');
+const behaltenGNode = graph.nodes.find(n => n.name === 'Behalten (gespielt)');
+const flowLink = graph.links.find(d => d.source.name === 'Ungespielt' && d.target.name === 'Gespielt');
+const flowTop = flowLink.y0 - flowLink.width / 2;
+
+// Gespielt-Block kompakt verbreitern (symmetrisch um seine ursprüngliche Mitte)
+const gCx = (gespieltNode.x0 + gespieltNode.x1) / 2;
+gespieltNode.x0 = gCx - 55;
+gespieltNode.x1 = gCx + 55;
+
+// Ziel-Blöcke rechts nur nach links verbreitern, rechte Kante bleibt am Rand
+verkauftGNode.x0 = verkauftGNode.x1 - 110;
+behaltenGNode.x0 = behaltenGNode.x1 - 110;
+
+// "Behalten (ungespielt)" ans Ende des gelben Streifens verschieben (direkt vor den Gespielt-Block)
+const behaltenUNode = graph.nodes.find(n => n.name === 'Behalten (ungespielt)');
+behaltenUNode.x1 = gespieltNode.x0;
+behaltenUNode.x0 = gespieltNode.x0 - 16;
+
+const playedTotal = d3.sum(Object.values(totalByRating));
+
+// Gespielt-Segmente (10 oben -> 3 unten), inkl. Unterteilung je Segment in "geht an Behalten" (oben) / "geht an Verkauft" (unten)
+const ratingData = [];
+let cum = 0, cumSrc = 0;
+ratingOrder.forEach(r => {
+  const count = totalByRating[r] || 0;
+  if (!count) return;
+  const thick = (count / playedTotal) * (gespieltNode.y1 - gespieltNode.y0);
+  const y0 = gespieltNode.y0 + cum, y1 = y0 + thick;
+  cum += thick;
+  const srcY0 = flowTop + cumSrc, srcY1 = srcY0 + thick;
+  cumSrc += thick;
+  const cCount = groupC[r] || 0, bCount = groupB[r] || 0;
+  const cThick = (cCount / count) * thick;
+  ratingData.push({
+    rating: r, count, y0, y1, srcY0, srcY1,
+    color: greenByRating[r], textColor: textColorFor(r), pct: count / playedTotal * 100,
+    cCount, bCount,
+    subCy0: y0, subCy1: y0 + cThick,
+    subBy0: y0 + cThick, subBy1: y1
+  });
+});
+
+// Hilfsfunktion: baut Segmente (Rechtecke) für einen Knoten aus einer rating->Anzahl-Map
+function buildSegments(node, counts, colorRamp) {
+  const total = d3.sum(Object.values(counts));
+  const nodeH = node.y1 - node.y0;
+  const entries = [];
+  let c = 0;
+  ratingOrder.forEach(r => {
+    const count = counts[r] || 0;
+    if (!count) return;
+    const thick = (count / total) * nodeH;
+    const y0 = node.y0 + c, y1 = y0 + thick;
+    c += thick;
+    entries.push({rating: r, count, y0, y1, color: colorRamp[r], textColor: textColorFor(r), pct: count / total * 100});
+  });
+  return entries;
+}
+
+const ratingDataB = buildSegments(verkauftGNode, groupB, orangeByRating);
+const ratingDataC = buildSegments(behaltenGNode, groupC, greenByRating);
+
+function drawSegBlock(node, entries) {
+  const cx = (node.x0 + node.x1) / 2;
+  const rects = g.append('g')
+    .selectAll('rect')
+    .data(entries)
+    .join('rect')
+    .attr('x', node.x0)
+    .attr('y', d => d.y0)
+    .attr('width', node.x1 - node.x0)
+    .attr('height', d => d.y1 - d.y0)
+    .attr('fill', d => d.color)
+    .attr('stroke', '#1B2921')
+    .attr('stroke-width', 1);
+  rects.append('title')
+    .text(d => `Rating ${d.rating}: ${d.count} Spiele (${d.pct.toFixed(1).replace('.', ',')}%)`);
+
+  const labelGroups = g.append('g')
+    .selectAll('g')
+    .data(entries)
+    .join('g')
+    .attr('transform', d => `translate(${cx}, ${(d.y0 + d.y1) / 2})`);
+
+  labelGroups.each(function (d) {
+    const h = d.y1 - d.y0;
+    const pct = d.pct.toFixed(1).replace('.', ',') + '%';
+    const sel = d3.select(this);
+    if (h < 11) {
+      return; // zu schmal für lesbaren Text - Info steckt im Tooltip
+    }
+    if (h >= 30) {
+      sel.append('text').attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
+        .attr('y', -6).attr('fill', d.textColor).attr('font-size', '11px').attr('font-weight', '600')
+        .text(`Rating ${d.rating}`);
+      sel.append('text').attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
+        .attr('y', 8).attr('fill', d.textColor).attr('font-size', '10px')
+        .text(pct);
+    } else if (h >= 16) {
+      sel.append('text').attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
+        .attr('fill', d.textColor).attr('font-size', '10px').attr('font-weight', '600')
+        .text(`${d.rating} \u00b7 ${pct}`);
+    } else {
+      sel.append('text').attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
+        .attr('fill', d.textColor).attr('font-size', '9px')
+        .text(pct);
+    }
+  });
+}
+
+const linkColor = d => nodeColor(d.target.name);
+const linksToDraw = graph.links.filter(d =>
+  !(d.source.name === 'Ungespielt' && d.target.name === 'Gespielt') &&
+  !(d.source.name === 'Gespielt' && d.target.name === 'Weitergewandert (gespielt)') &&
+  !(d.source.name === 'Gespielt' && d.target.name === 'Behalten (gespielt)')
+);
+
+const bandCurve = d3.linkHorizontal().x(p => p.x).y(p => p.y);
+
+function drawBands(data, sx, ex, syAccessor, eyAccessor, heightAccessor) {
+  g.append('g')
+    .attr('fill', 'none')
+    .selectAll('path')
+    .data(data)
+    .join('path')
+    .attr('d', d => bandCurve({
+      source: {x: sx, y: syAccessor(d)},
+      target: {x: ex, y: eyAccessor(d)}
+    }))
+    .attr('stroke', d => d.color)
+    .attr('stroke-opacity', 0.9)
+    .attr('stroke-width', d => Math.max(1, heightAccessor(d)));
+}
+
+// Ungespielt -> Gespielt: 8 Rating-Bänder
+drawBands(ratingData, ungespieltNode.x1, gespieltNode.x0,
+  d => (d.srcY0 + d.srcY1) / 2, d => (d.y0 + d.y1) / 2, d => d.y1 - d.y0);
+
+// Gespielt -> Behalten (gespielt): oberer Teil jedes Rating-Segments
+const toBehalten = ratingData.filter(d => d.cCount > 0).map(d => {
+  const target = ratingDataC.find(e => e.rating === d.rating);
+  return {color: greenByRating[d.rating], _srcY: (d.subCy0 + d.subCy1) / 2, _tgtY: (target.y0 + target.y1) / 2, _h: d.subCy1 - d.subCy0};
+});
+drawBands(toBehalten, gespieltNode.x1, behaltenGNode.x0, d => d._srcY, d => d._tgtY, d => d._h);
+
+// Gespielt -> Weitergewandert (gespielt): unterer Teil jedes Rating-Segments
+const toVerkauft = ratingData.filter(d => d.bCount > 0).map(d => {
+  const target = ratingDataB.find(e => e.rating === d.rating);
+  return {color: orangeByRating[d.rating], _srcY: (d.subBy0 + d.subBy1) / 2, _tgtY: (target.y0 + target.y1) / 2, _h: d.subBy1 - d.subBy0};
+});
+drawBands(toVerkauft, gespieltNode.x1, verkauftGNode.x0, d => d._srcY, d => d._tgtY, d => d._h);
+
+g.append('g')
+  .attr('fill', 'none')
+  .selectAll('path')
+  .data(linksToDraw)
+  .join('path')
+  .attr('d', d3.sankeyLinkHorizontal())
+  .attr('stroke', linkColor)
+  .attr('stroke-opacity', 0.32)
+  .attr('stroke-width', d => Math.max(1, d.width));
+
+g.append('g')
+  .selectAll('rect')
+  .data(graph.nodes.filter(n => !['Gespielt', 'Weitergewandert (gespielt)', 'Behalten (gespielt)'].includes(n.name)))
+  .join('rect')
+  .attr('x', d => d.x0)
+  .attr('y', d => d.y0)
+  .attr('width', d => d.x1 - d.x0)
+  .attr('height', d => d.y1 - d.y0)
+  .attr('rx', 3)
+  .attr('fill', d => nodeColor(d.name))
+  .attr('stroke', '#0000')
+  .attr('stroke-width', 0.5);
+
+drawSegBlock(gespieltNode, ratingData);
+drawSegBlock(verkauftGNode, ratingDataB);
+drawSegBlock(behaltenGNode, ratingDataC);
+
+const labelAnchor = d => {
+  if (d.name === 'Ungespielt') return {anchor: 'start', x: d.x0};
+  if (d.name === 'Gespielt') return {anchor: 'middle', x: (d.x0 + d.x1) / 2};
+  return {anchor: 'end', x: d.x1};
+};
+
+const labels = g.append('g')
+  .selectAll('g')
+  .data(graph.nodes)
+  .join('g')
+  .attr('transform', d => `translate(${labelAnchor(d).x}, ${d.y0})`);
+
+labels.append('text')
+  .attr('class', 'node-label')
+  .attr('text-anchor', d => labelAnchor(d).anchor)
+  .attr('y', -22)
+  .text(d => d.name);
+
+labels.append('text')
+  .attr('class', 'node-value')
+  .attr('text-anchor', d => labelAnchor(d).anchor)
+  .attr('y', -7)
+  .text(d => `${d.value} Spiele \u00b7 ${(d.value / totalGames * 100).toFixed(1).replace('.', ',')}%`);
+</script>
+</body>
+</html>
