@@ -80,6 +80,14 @@ h1{
   color:var(--text);
   margin-bottom:10px;
 }
+.username-intro{
+  font-size:12px;
+  color:var(--text-faint);
+  line-height:1.6;
+  max-width:620px;
+  margin-bottom:4px;
+}
+.csv-upload-section{margin-top:16px;padding-top:16px;border-top:0.5px solid var(--border-soft);}
 input[type="file"]{
   display:block;
   color:var(--text-dim);
@@ -296,11 +304,15 @@ input[type="file"]{
   </div>
 
   <div class="upload-card">
-    <label class="upload-label" for="csvInput" id="uploadLabelText"></label>
-    <input type="file" id="csvInput" accept=".csv">
-    <div class="upload-hint" id="uploadHintText"></div>
+    <div class="username-intro" id="usernameIntroText"></div>
     <input type="text" id="usernameInput" class="username-input">
     <a href="#" id="bggCollectionLink" class="bgg-collection-link" target="_blank" rel="noopener" style="display:none;"></a>
+
+    <div class="csv-upload-section">
+      <label class="upload-label" for="csvInput" id="uploadLabelText"></label>
+      <input type="file" id="csvInput" accept=".csv">
+      <div class="upload-hint" id="uploadHintText"></div>
+    </div>
 
     <div class="mode-toggle" id="modeToggle">
       <span class="mode-toggle-label" id="modeToggleLabelText"></span>
@@ -409,10 +421,11 @@ const I18N = {
     headingDefault: 'Meine Brettspiele',
     headingWithName: name => `${name}s Brettspiele`,
     subtitle: 'Farbe zeigt den Pfad: Grau = Vorbestellt, Gelb = noch ungespielt, Gr\u00fcn = gespielt und behalten, Orange = gespielt und weitergewandert, Rot = ungespielt weitergewandert.',
-    uploadLabel: 'BGG-Sammlung hochladen (CSV)',
-    uploadHint: 'Die Datei wird nur lokal im Browser verarbeitet und nirgendwo hochgeladen. Damit du sie nicht erneut hochladen musst, merkt sich dein Browser sie lokal \u2013 sie verl\u00e4sst dein Ger\u00e4t nie. Der BGG-Nutzername steht nicht in dieser CSV-Datei \u2013 hier optional selbst eintragen:',
+    usernameIntro: 'Gib deinen BGG-Nutzernamen ein, um deine Sammlung auf BGG zu finden und als CSV zu exportieren:',
     usernamePlaceholder: 'BGG-Nutzername (optional)',
     bggCollectionLink: 'Sammlung auf BGG',
+    uploadLabel: 'BGG-Sammlung hochladen (CSV)',
+    uploadHint: 'Die Datei wird nur lokal im Browser verarbeitet und nirgendwo hochgeladen. Damit du sie nicht erneut hochladen musst, merkt sich dein Browser sie lokal \u2013 sie verl\u00e4sst dein Ger\u00e4t nie.',
     modeToggleLabel: '\u201eGespielt\u201c bestimmen anhand von:',
     modeBtnRating: 'Bewertung',
     modeBtnNumplays: 'BGG-Play-Tracking',
@@ -462,10 +475,11 @@ const I18N = {
     headingDefault: 'My Board Games',
     headingWithName: name => `${name}\u2019s Board Games`,
     subtitle: 'Color shows the path: Gray = preordered, Yellow = not played yet, Green = played and kept, Orange = played and moved on, Red = never played, moved on.',
-    uploadLabel: 'Upload BGG collection (CSV)',
-    uploadHint: 'The file is processed locally in your browser only and never uploaded. Your browser remembers it locally so you don\u2019t have to upload it again \u2013 it never leaves your device. Your BGG username isn\u2019t part of this CSV file \u2013 enter it here if you\u2019d like:',
+    usernameIntro: 'Enter your BGG username to find your collection on BGG and export it as a CSV:',
     usernamePlaceholder: 'BGG username (optional)',
     bggCollectionLink: 'Collection on BGG',
+    uploadLabel: 'Upload BGG collection (CSV)',
+    uploadHint: 'The file is processed locally in your browser only and never uploaded. Your browser remembers it locally so you don\u2019t have to upload it again \u2013 it never leaves your device.',
     modeToggleLabel: 'Determine "played" using:',
     modeBtnRating: 'Rating',
     modeBtnNumplays: 'BGG play tracking',
@@ -1101,9 +1115,10 @@ function applyStaticLanguage() {
   document.getElementById('subtitleText').textContent = t('subtitle');
   updateBggCollectionLink(nameVal);
 
+  document.getElementById('usernameIntroText').textContent = t('usernameIntro');
+  document.getElementById('usernameInput').placeholder = t('usernamePlaceholder');
   document.getElementById('uploadLabelText').textContent = t('uploadLabel');
   document.getElementById('uploadHintText').textContent = t('uploadHint');
-  document.getElementById('usernameInput').placeholder = t('usernamePlaceholder');
 
   document.getElementById('modeToggleLabelText').textContent = t('modeToggleLabel');
   document.querySelector('.mode-btn[data-mode="rating"]').textContent = t('modeBtnRating');
