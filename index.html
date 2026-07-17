@@ -107,6 +107,14 @@ input[type="file"]{
   max-width:260px;
 }
 .username-input::placeholder{color:var(--text-faint);}
+.bgg-collection-link{
+  display:inline-block;
+  margin-top:8px;
+  font-size:12px;
+  color:var(--gold);
+  text-decoration:none;
+}
+.bgg-collection-link:hover{text-decoration:underline;}
 .mode-toggle{margin-top:16px;padding-top:16px;border-top:0.5px solid var(--border-soft);}
 .mode-toggle-label{font-size:12px;font-weight:600;color:var(--text);display:block;margin-bottom:8px;}
 .mode-toggle-buttons{display:inline-flex;background:var(--bg);border:0.5px solid var(--border-soft);border-radius:8px;padding:2px;}
@@ -271,6 +279,7 @@ input[type="file"]{
     <input type="file" id="csvInput" accept=".csv">
     <div class="upload-hint" id="uploadHintText"></div>
     <input type="text" id="usernameInput" class="username-input">
+    <a href="#" id="bggCollectionLink" class="bgg-collection-link" target="_blank" rel="noopener" style="display:none;"></a>
 
     <div class="mode-toggle" id="modeToggle">
       <span class="mode-toggle-label" id="modeToggleLabelText"></span>
@@ -381,6 +390,7 @@ const I18N = {
     uploadLabel: 'BGG-Sammlung hochladen (CSV)',
     uploadHint: 'Die Datei wird nur lokal im Browser verarbeitet, nirgendwo hochgeladen oder gespeichert. Der BGG-Nutzername steht nicht in der Export-Datei \u2013 hier optional selbst eintragen:',
     usernamePlaceholder: 'BGG-Nutzername (optional)',
+    bggCollectionLink: 'Sammlung auf BGG',
     modeToggleLabel: '\u201eGespielt\u201c bestimmen anhand von:',
     modeBtnRating: 'Bewertung',
     modeBtnNumplays: 'BGG-Play-Tracking',
@@ -432,6 +442,7 @@ const I18N = {
     uploadLabel: 'Upload BGG collection (CSV)',
     uploadHint: 'The file is processed locally in your browser only \u2013 nothing is uploaded or stored anywhere. Your BGG username isn\u2019t part of the export \u2013 enter it here if you\u2019d like:',
     usernamePlaceholder: 'BGG username (optional)',
+    bggCollectionLink: 'Collection on BGG',
     modeToggleLabel: 'Determine "played" using:',
     modeBtnRating: 'Rating',
     modeBtnNumplays: 'BGG play tracking',
@@ -1005,6 +1016,7 @@ function applyStaticLanguage() {
   const nameVal = document.getElementById('usernameInput').value.trim();
   document.getElementById('mainHeading').textContent = nameVal ? t('headingWithName', nameVal) : t('headingDefault');
   document.getElementById('subtitleText').textContent = t('subtitle');
+  updateBggCollectionLink(nameVal);
 
   document.getElementById('uploadLabelText').textContent = t('uploadLabel');
   document.getElementById('uploadHintText').textContent = t('uploadHint');
@@ -1066,9 +1078,21 @@ function processAndRender(rows) {
   summaryEl.textContent = t('uploadSummary', data.meta.rowCount, data.meta.skippedExpansion, data.totals.total, data.totals.playedTotal, modeLabel);
 }
 
+function updateBggCollectionLink(name) {
+  const linkEl = document.getElementById('bggCollectionLink');
+  if (name) {
+    linkEl.href = `https://boardgamegeek.com/collection/user/${encodeURIComponent(name)}`;
+    linkEl.textContent = t('bggCollectionLink');
+    linkEl.style.display = 'inline-block';
+  } else {
+    linkEl.style.display = 'none';
+  }
+}
+
 document.getElementById('usernameInput').addEventListener('input', function () {
   const name = this.value.trim();
   document.getElementById('mainHeading').textContent = name ? t('headingWithName', name) : t('headingDefault');
+  updateBggCollectionLink(name);
 });
 
 document.querySelectorAll('.mode-btn').forEach(btn => {
