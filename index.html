@@ -140,6 +140,8 @@ input[type="file"]{
   height:auto;
   border-radius:10px;
   border:0.5px solid var(--border-soft);
+  opacity:0;
+  transition:opacity 0.5s ease;
 }
 .mode-toggle{margin-top:16px;padding-top:16px;border-top:0.5px solid var(--border-soft);}
 .mode-toggle-label{font-size:12px;font-weight:600;color:var(--text);display:block;margin-bottom:8px;}
@@ -1202,6 +1204,40 @@ function processAndRender(rows) {
   summaryEl.textContent = t('uploadSummary', data.meta.rowCount, data.meta.skippedExpansion, data.totals.total, data.totals.playedTotal, modeLabel);
 }
 
+// Fades the hint screenshot in/out instead of an instant display toggle. The
+// 500ms setTimeout mirrors the CSS transition duration, so the element only
+// leaves layout flow (display:none) once it has visually finished fading -
+// the guard checks opacity is still 0 in case a later show cancelled the fade.
+function showHintImage() {
+  const el = document.getElementById('bggCollectionHintImg');
+  if (el.style.display !== 'block') {
+    el.style.display = 'block';
+    void el.offsetWidth; // force layout so the opacity change below animates
+  }
+  requestAnimationFrame(() => { el.style.opacity = '1'; });
+}
+
+function hideHintImage() {
+  const el = document.getElementById('bggCollectionHintImg');
+  el.style.opacity = '0';
+  window.setTimeout(() => {
+    if (el.style.opacity === '0') el.style.display = 'none';
+  }, 500);
+}
+
+// The hint image is only useful before a collection is loaded - once a CSV
+// comes in (upload, drag-drop, or restored from a previous session) it fades
+// out for good, even if the username field changes afterward.
+let hasCsvLoaded = false;
+
+function updateHintImageVisibility(name) {
+  if (name && !hasCsvLoaded) {
+    showHintImage();
+  } else {
+    hideHintImage();
+  }
+}
+
 function updateBggCollectionLink(name) {
   const linkEl = document.getElementById('bggCollectionLink');
   const hintImgEl = document.getElementById('bggCollectionHintImg');
@@ -1210,11 +1246,10 @@ function updateBggCollectionLink(name) {
     linkEl.textContent = t('bggCollectionLink');
     linkEl.style.display = 'inline-block';
     hintImgEl.alt = t('bggCollectionHintAlt');
-    hintImgEl.style.display = 'block';
   } else {
     linkEl.style.display = 'none';
-    hintImgEl.style.display = 'none';
   }
+  updateHintImageVisibility(name);
 }
 
 document.getElementById('usernameInput').addEventListener('input', function () {
@@ -1239,6 +1274,9 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
 // Shared by the file picker, drag-and-drop, and restoring a saved session, so
 // all three paths go through the same parsing/validation/persistence logic.
 function loadCsvText(text, persist) {
+  hasCsvLoaded = true;
+  updateHintImageVisibility(document.getElementById('usernameInput').value.trim());
+
   const summaryEl = document.getElementById('uploadSummary');
   summaryEl.className = 'upload-summary';
   summaryEl.textContent = t('reading');
@@ -1445,8 +1483,8 @@ document.getElementById('exportPngBtn').addEventListener('click', async function
 });
 
 restoreFromStorage();
-applyStaticLanguage();
 restoreSavedCsv();
+applyStaticLanguage();
 </script>
 </body>
 </html>
