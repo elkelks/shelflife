@@ -27,6 +27,7 @@ body{margin:0;background:var(--bg);}
   margin:0 auto;
 }
 .header{margin-bottom:20px;}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;}
 .eyebrow{
   font-size:12px;
   letter-spacing:0.08em;
@@ -47,6 +48,18 @@ h1{
   max-width:640px;
   line-height:1.6;
 }
+.lang-toggle{display:inline-flex;background:var(--surface);border:0.5px solid var(--border-soft);border-radius:8px;padding:2px;flex-shrink:0;}
+.lang-btn{
+  background:none;
+  border:none;
+  color:var(--text-dim);
+  font-family:inherit;
+  font-size:12px;
+  padding:6px 12px;
+  border-radius:6px;
+  cursor:pointer;
+}
+.lang-btn.active{background:var(--bg);color:var(--text);}
 .upload-card{
   background:var(--surface);
   border:0.5px dashed var(--border-soft);
@@ -240,24 +253,32 @@ input[type="file"]{
 <body>
 <div class="page">
   <div class="header">
-    <div class="eyebrow">Von der Vorbestellung bis zum Verkauf</div>
-    <h1 id="mainHeading">Meine Brettspiele</h1>
-    <div class="subtitle">Farbe zeigt den Pfad: Grau = Vorbestellt, Gelb = noch ungespielt, Gr&uuml;n = gespielt und behalten, Orange = gespielt und weitergewandert, Rot = ungespielt weitergewandert.</div>
+    <div class="header-top">
+      <div class="header-text">
+        <div class="eyebrow" id="eyebrowText"></div>
+        <h1 id="mainHeading"></h1>
+      </div>
+      <div class="lang-toggle" id="langToggle">
+        <button type="button" class="lang-btn active" data-lang="de">DE</button>
+        <button type="button" class="lang-btn" data-lang="en">EN</button>
+      </div>
+    </div>
+    <div class="subtitle" id="subtitleText"></div>
   </div>
 
   <div class="upload-card">
-    <label class="upload-label" for="csvInput">BGG-Sammlung hochladen (CSV)</label>
+    <label class="upload-label" for="csvInput" id="uploadLabelText"></label>
     <input type="file" id="csvInput" accept=".csv">
-    <div class="upload-hint">Die Datei wird nur lokal im Browser verarbeitet, nirgendwo hochgeladen oder gespeichert. Der BGG-Nutzername steht nicht in der Export-Datei &ndash; hier optional selbst eintragen:</div>
-    <input type="text" id="usernameInput" class="username-input" placeholder="BGG-Nutzername (optional)">
+    <div class="upload-hint" id="uploadHintText"></div>
+    <input type="text" id="usernameInput" class="username-input">
 
     <div class="mode-toggle" id="modeToggle">
-      <span class="mode-toggle-label">&bdquo;Gespielt&ldquo; bestimmen anhand von:</span>
+      <span class="mode-toggle-label" id="modeToggleLabelText"></span>
       <div class="mode-toggle-buttons">
-        <button type="button" class="mode-btn active" data-mode="rating">Bewertung</button>
-        <button type="button" class="mode-btn" data-mode="numplays">BGG-Play-Tracking</button>
+        <button type="button" class="mode-btn active" data-mode="rating"></button>
+        <button type="button" class="mode-btn" data-mode="numplays"></button>
       </div>
-      <div class="mode-toggle-hint" id="modeToggleHint">Ein Spiel gilt als gespielt, sobald du ihm ein pers&ouml;nliches Rating gegeben hast. Passend, wenn du Plays nicht konsequent auf BGG loggst.</div>
+      <div class="mode-toggle-hint" id="modeToggleHint"></div>
     </div>
 
     <div class="upload-summary" id="uploadSummary"></div>
@@ -267,28 +288,28 @@ input[type="file"]{
     <div class="main-col">
       <div class="chart-wrap">
         <div class="chart-toolbar" id="chartToolbar" style="display:none;">
-          <button type="button" id="exportPngBtn" class="export-btn">Als PNG exportieren</button>
+          <button type="button" id="exportPngBtn" class="export-btn"></button>
         </div>
         <svg id="sankey" width="100%" style="display:none;"></svg>
-        <div class="placeholder" id="placeholder">Noch keine Datei geladen.</div>
+        <div class="placeholder" id="placeholder"></div>
         <div class="legend" id="legend" style="display:none;">
-          <span><span class="dot" style="background:#8A9A8F"></span>Vorbestellt</span>
-          <span><span class="dot" style="background:#5B6B60"></span>Gesamte Sammlung</span>
-          <span><span class="dot" style="background:#E3C23A"></span>noch ungespielt</span>
-          <span><span class="grad-swatch"></span>gespielt und behalten</span>
-          <span><span class="grad-swatch" style="background:linear-gradient(90deg,#F5D9B0,#7A3F0E)"></span>gespielt und weitergewandert</span>
-          <span><span class="dot" style="background:#D64545"></span>ungespielt weitergewandert</span>
+          <span><span class="dot" style="background:#8A9A8F"></span><span id="legendVorbestellt"></span></span>
+          <span><span class="dot" style="background:#5B6B60"></span><span id="legendGesamteSammlung"></span></span>
+          <span><span class="dot" style="background:#E3C23A"></span><span id="legendNochUngespielt"></span></span>
+          <span><span class="grad-swatch"></span><span id="legendGespieltBehalten"></span></span>
+          <span><span class="grad-swatch" style="background:linear-gradient(90deg,#F5D9B0,#7A3F0E)"></span><span id="legendGespieltWeitergewandert"></span></span>
+          <span><span class="dot" style="background:#D64545"></span><span id="legendUngespieltWeitergewandert"></span></span>
         </div>
       </div>
 
       <div class="outliers" id="outliers" style="display:none;">
         <div class="outlier-card">
-          <div class="outlier-title" id="kept-low-title">Behalten trotz Rating</div>
+          <div class="outlier-title" id="kept-low-title"></div>
           <div class="outlier-sub" id="kept-low-sub"></div>
           <div id="kept-low-rows"></div>
         </div>
         <div class="outlier-card">
-          <div class="outlier-title" id="sold-high-title">Weitergewandert trotz Rating</div>
+          <div class="outlier-title" id="sold-high-title"></div>
           <div class="outlier-sub" id="sold-high-sub"></div>
           <div id="sold-high-rows"></div>
         </div>
@@ -297,11 +318,11 @@ input[type="file"]{
 
     <div class="overview-col" id="overviewCol" style="display:none;">
       <div class="overview-panel">
-        <div class="overview-title">Meine gesamte Sammlung</div>
+        <div class="overview-title" id="overviewTitleText"></div>
 
         <div class="overview-section">
           <div class="overview-section-header">
-            <span class="overview-section-title"><span class="dot" style="background:#8A9A8F"></span>Vorbestellt</span>
+            <span class="overview-section-title"><span class="dot" style="background:#8A9A8F"></span><span id="ovTitleVorbestellt"></span></span>
             <span class="overview-section-count" id="ov-vorbestellt-count"></span>
           </div>
           <div class="overview-list" id="ov-vorbestellt-list"></div>
@@ -309,7 +330,7 @@ input[type="file"]{
 
         <div class="overview-section">
           <div class="overview-section-header">
-            <span class="overview-section-title"><span class="dot" style="background:#E3C23A"></span>noch ungespielt</span>
+            <span class="overview-section-title"><span class="dot" style="background:#E3C23A"></span><span id="ovTitleUngespielt"></span></span>
             <span class="overview-section-count" id="ov-ungespielt-count"></span>
           </div>
           <div class="overview-list" id="ov-ungespielt-list"></div>
@@ -317,7 +338,7 @@ input[type="file"]{
 
         <div class="overview-section">
           <div class="overview-section-header">
-            <span class="overview-section-title"><span class="dot" style="background:#D64545"></span>ungespielt weitergewandert</span>
+            <span class="overview-section-title"><span class="dot" style="background:#D64545"></span><span id="ovTitleWeitergewandertU"></span></span>
             <span class="overview-section-count" id="ov-weitergewandert-u-count"></span>
           </div>
           <div class="overview-list" id="ov-weitergewandert-u-list"></div>
@@ -325,7 +346,7 @@ input[type="file"]{
 
         <div class="overview-section">
           <div class="overview-section-header">
-            <span class="overview-section-title"><span class="grad-swatch"></span>gespielt und behalten</span>
+            <span class="overview-section-title"><span class="grad-swatch"></span><span id="ovTitleBehaltenG"></span></span>
             <span class="overview-section-count" id="ov-behalten-g-count"></span>
           </div>
           <div class="overview-list" id="ov-behalten-g-list"></div>
@@ -333,7 +354,7 @@ input[type="file"]{
 
         <div class="overview-section">
           <div class="overview-section-header">
-            <span class="overview-section-title"><span class="grad-swatch" style="background:linear-gradient(90deg,#F5D9B0,#7A3F0E)"></span>gespielt und weitergewandert</span>
+            <span class="overview-section-title"><span class="grad-swatch" style="background:linear-gradient(90deg,#F5D9B0,#7A3F0E)"></span><span id="ovTitleWeitergewandertG"></span></span>
             <span class="overview-section-count" id="ov-weitergewandert-g-count"></span>
           </div>
           <div class="overview-list" id="ov-weitergewandert-g-list"></div>
@@ -348,6 +369,118 @@ input[type="file"]{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-sankey/0.12.3/d3-sankey.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
+// ---------- i18n ----------
+const I18N = {
+  de: {
+    pageTitle: 'Meine Brettspiele \u00b7 Sankey',
+    htmlLang: 'de',
+    eyebrow: 'Von der Vorbestellung bis zum Verkauf',
+    headingDefault: 'Meine Brettspiele',
+    headingWithName: name => `${name}s Brettspiele`,
+    subtitle: 'Farbe zeigt den Pfad: Grau = Vorbestellt, Gelb = noch ungespielt, Gr\u00fcn = gespielt und behalten, Orange = gespielt und weitergewandert, Rot = ungespielt weitergewandert.',
+    uploadLabel: 'BGG-Sammlung hochladen (CSV)',
+    uploadHint: 'Die Datei wird nur lokal im Browser verarbeitet, nirgendwo hochgeladen oder gespeichert. Der BGG-Nutzername steht nicht in der Export-Datei \u2013 hier optional selbst eintragen:',
+    usernamePlaceholder: 'BGG-Nutzername (optional)',
+    modeToggleLabel: '\u201eGespielt\u201c bestimmen anhand von:',
+    modeBtnRating: 'Bewertung',
+    modeBtnNumplays: 'BGG-Play-Tracking',
+    modeHintRating: 'Ein Spiel gilt als gespielt, sobald du ihm ein pers\u00f6nliches Rating gegeben hast. Passend, wenn du Plays nicht konsequent auf BGG loggst.',
+    modeHintNumplays: 'Ein Spiel gilt als gespielt, sobald mindestens 1 Play auf BGG erfasst ist (Spalte \u201enumplays\u201c). Passend, wenn du deine Plays \u00fcber BGGs Play-Tracking pflegst.',
+    exportBtn: 'Als PNG exportieren',
+    exportBtnBusy: 'Exportiere...',
+    exportFailed: msg => `PNG-Export fehlgeschlagen: ${msg}`,
+    placeholderText: 'Noch keine Datei geladen.',
+    legendVorbestellt: 'Vorbestellt',
+    legendGesamteSammlung: 'Gesamte Sammlung',
+    legendNochUngespielt: 'noch ungespielt',
+    legendGespieltBehalten: 'gespielt und behalten',
+    legendGespieltWeitergewandert: 'gespielt und weitergewandert',
+    legendUngespieltWeitergewandert: 'ungespielt weitergewandert',
+    nodeNameGespielt: 'gespielt',
+    overviewTitle: 'Meine gesamte Sammlung',
+    emptyCategory: 'Keine Spiele in dieser Kategorie.',
+    noOutliers: 'Aktuell keine Ausrei\u00dfer in dieser Kategorie.',
+    moreOutliers: (n, cap) => `\u2026 und ${n} weitere (zeige die ${cap} mit dem st\u00e4rksten Ausschlag).`,
+    outlierKeptTitle: cutoff => `Behalten trotz Rating \u2264 ${cutoff}`,
+    outlierKeptTitleFallback: 'Behalten trotz niedrigem Rating',
+    outlierKeptSub: n => `${n} Spiele \u00b7 die am niedrigsten bewerteten gespielten Spiele, die trotzdem nicht weitergewandert sind`,
+    outlierSoldTitle: cutoff => `Weitergewandert trotz Rating \u2265 ${cutoff}`,
+    outlierSoldTitleFallback: 'Weitergewandert trotz hohem Rating',
+    outlierSoldSub: n => `${n} Spiele \u00b7 die am h\u00f6chsten bewerteten gespielten Spiele, die trotzdem weitergewandert sind`,
+    gamesLabel: 'Spiele',
+    ratingLabel: n => `Rating ${n}`,
+    unratedLabel: 'Ungewertet',
+    preorderedSuffix: n => `+ ${n} vorbestellt`,
+    vorbestelltTooltip: (n, capped) => `Vorbestellt: ${n} Spiele (nicht in den Prozentangaben oben enthalten)${capped ? ' \u2013 Balkenh\u00f6he gedeckelt' : ''}`,
+    reading: 'Lese Datei...',
+    notBggExport: 'Diese Datei sieht nicht wie ein BGG-Collection-Export aus (Spalten "own"/"prevowned"/"rating" fehlen).',
+    zeroRelevant: n => `${n} Zeilen gelesen, aber 0 relevante Spiele (own/prevowned, ohne Erweiterungen) gefunden - kein Diagramm m\u00f6glich.`,
+    uploadSummary: (rowCount, skippedExp, total, played, modeLabel) => `${rowCount} Zeilen gelesen \u00b7 ${skippedExp} Erweiterungen ausgeschlossen \u00b7 ${total} relevante Spiele (own/prevowned) \u00b7 ${played} davon gespielt (Methode: ${modeLabel}).`,
+    csvReadError: msg => `Konnte die CSV nicht lesen: ${msg}`,
+    unknownTitle: 'Unbekannt',
+    preorderedCardTitle: 'Vorbestellte Spiele',
+    preorderedCardSub: n => `${n} Spiele \u00b7 noch nicht im Besitz, aber vorbestellt`,
+    moreGeneric: n => `\u2026 und ${n} weitere`
+  },
+  en: {
+    pageTitle: 'My Board Games \u00b7 Sankey',
+    htmlLang: 'en',
+    eyebrow: 'From preorder to sale',
+    headingDefault: 'My Board Games',
+    headingWithName: name => `${name}\u2019s Board Games`,
+    subtitle: 'Color shows the path: Grey = preordered, Yellow = not played yet, Green = played and kept, Orange = played and moved on, Red = never played, moved on.',
+    uploadLabel: 'Upload BGG collection (CSV)',
+    uploadHint: 'The file is processed locally in your browser only \u2013 nothing is uploaded or stored anywhere. Your BGG username isn\u2019t part of the export \u2013 enter it here if you\u2019d like:',
+    usernamePlaceholder: 'BGG username (optional)',
+    modeToggleLabel: 'Determine "played" using:',
+    modeBtnRating: 'Rating',
+    modeBtnNumplays: 'BGG play tracking',
+    modeHintRating: 'A game counts as played once you\u2019ve given it a personal rating. Good fit if you don\u2019t log plays on BGG consistently.',
+    modeHintNumplays: 'A game counts as played once at least 1 play is logged on BGG (the "numplays" column). Good fit if you maintain your plays via BGG\u2019s play tracking.',
+    exportBtn: 'Export as PNG',
+    exportBtnBusy: 'Exporting...',
+    exportFailed: msg => `PNG export failed: ${msg}`,
+    placeholderText: 'No file loaded yet.',
+    legendVorbestellt: 'Preordered',
+    legendGesamteSammlung: 'Entire collection',
+    legendNochUngespielt: 'not played yet',
+    legendGespieltBehalten: 'played and kept',
+    legendGespieltWeitergewandert: 'played and moved on',
+    legendUngespieltWeitergewandert: 'never played, moved on',
+    nodeNameGespielt: 'played',
+    overviewTitle: 'My entire collection',
+    emptyCategory: 'No games in this category.',
+    noOutliers: 'No outliers in this category right now.',
+    moreOutliers: (n, cap) => `\u2026 and ${n} more (showing the ${cap} most extreme).`,
+    outlierKeptTitle: cutoff => `Kept despite rating \u2264 ${cutoff}`,
+    outlierKeptTitleFallback: 'Kept despite low rating',
+    outlierKeptSub: n => `${n} games \u00b7 the lowest-rated played games that were kept anyway`,
+    outlierSoldTitle: cutoff => `Moved on despite rating \u2265 ${cutoff}`,
+    outlierSoldTitleFallback: 'Moved on despite high rating',
+    outlierSoldSub: n => `${n} games \u00b7 the highest-rated played games that moved on anyway`,
+    gamesLabel: 'games',
+    ratingLabel: n => `Rating ${n}`,
+    unratedLabel: 'Unrated',
+    preorderedSuffix: n => `+ ${n} preordered`,
+    vorbestelltTooltip: (n, capped) => `Preordered: ${n} games (not included in the percentages above)${capped ? ' \u2013 bar height capped' : ''}`,
+    reading: 'Reading file...',
+    notBggExport: 'This file doesn\u2019t look like a BGG collection export (missing "own"/"prevowned"/"rating" columns).',
+    zeroRelevant: n => `${n} rows read, but found 0 relevant games (own/prevowned, excluding expansions) \u2013 no diagram possible.`,
+    uploadSummary: (rowCount, skippedExp, total, played, modeLabel) => `${rowCount} rows read \u00b7 ${skippedExp} expansions excluded \u00b7 ${total} relevant games (own/prevowned) \u00b7 ${played} of them played (method: ${modeLabel}).`,
+    csvReadError: msg => `Could not read the CSV: ${msg}`,
+    unknownTitle: 'Unknown',
+    preorderedCardTitle: 'Preordered games',
+    preorderedCardSub: n => `${n} games \u00b7 not owned yet, but preordered`,
+    moreGeneric: n => `\u2026 and ${n} more`
+  }
+};
+
+let currentLang = 'de';
+function t(key, ...args) {
+  const entry = I18N[currentLang][key];
+  return typeof entry === 'function' ? entry(...args) : entry;
+}
+
 const OUTLIER_TARGET_COUNT = 10; // aim for this many, but never split a tied rating tier to get there
 
 const RED = '#D64545';
@@ -357,10 +490,8 @@ const PREORDER_GREY = '#8A9A8F';
 const greenByRating = {1: '#F4FAF1', 2: '#E0F1D9', 3: '#C9E7C2', 4: '#AEDCA3', 5: '#8FCE82', 6: '#6EBE62', 7: '#4CA84A', 8: '#348A38', 9: '#236B29', 10: '#154D1B'};
 const orangeByRating = {1: '#FEF6EC', 2: '#FBEAD5', 3: '#F5D9B0', 4: '#F0C48D', 5: '#EBB06B', 6: '#E39A47', 7: '#D9822B', 8: '#C06A1D', 9: '#A05515', 10: '#7A3F0E'};
 const textColorFor = key => key === 'unrated' ? '#F1FAEE' : (key <= 6 ? '#173813' : '#F1FAEE');
-const labelFor = key => key === 'unrated' ? 'Ungewertet' : `Rating ${key}`;
+const labelFor = key => key === 'unrated' ? t('unratedLabel') : t('ratingLabel', key);
 const ratingOrder = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 'unrated'];
-
-// ---------- hover tooltip helpers ----------
 
 function escapeHtml(s) {
   const div = document.createElement('div');
@@ -399,7 +530,7 @@ function pickTiered(list, direction, target) {
 // rating - the right call for people who don't use BGG's play log consistently.
 // playedMode 'numplays': a game counts as played once numplays > 0 - for people
 // who do log plays on BGG. Either way, rating (if present) still drives the
-// color-by-rating breakdown; a played-but-unrated game shows up as "Ungewertet".
+// color-by-rating breakdown; a played-but-unrated game shows up as "Ungewertet"/"Unrated".
 function buildDataFromRows(rows, playedMode) {
   playedMode = playedMode === 'numplays' ? 'numplays' : 'rating';
   let A = 0, B = 0, C = 0, D = 0;
@@ -419,7 +550,7 @@ function buildDataFromRows(rows, playedMode) {
     // and does not interact with the own/prevowned logic below at all.
     if (String(r.preordered).trim() === '1') {
       preorderedCount++;
-      preorderedTitles.push(r.objectname || 'Unbekannt');
+      preorderedTitles.push(r.objectname || t('unknownTitle'));
     }
 
     const own = String(r.own).trim() === '1';
@@ -432,7 +563,7 @@ function buildDataFromRows(rows, playedMode) {
     const rating = hasRating ? Math.min(10, Math.max(1, Math.round(parseFloat(ratingRaw)))) : null;
     const numplays = parseInt(r.numplays, 10) || 0;
     const played = playedMode === 'numplays' ? numplays > 0 : hasRating;
-    const title = r.objectname || 'Unbekannt';
+    const title = r.objectname || t('unknownTitle');
 
     if (own) {
       if (played) {
@@ -494,46 +625,46 @@ const OUTLIER_DISPLAY_CAP = 30;
 function renderOutliers(containerId, list, ramp) {
   const el = document.getElementById(containerId);
   if (!list.length) {
-    el.innerHTML = '<div class="empty-note">Aktuell keine Ausrei&szlig;er in dieser Kategorie.</div>';
+    el.innerHTML = `<div class="empty-note">${t('noOutliers')}</div>`;
     return;
   }
   const shown = list.slice(0, OUTLIER_DISPLAY_CAP);
   let html = shown.map(gm => {
     const bg = ramp[gm.rating], fg = textColorFor(gm.rating);
-    return `<div class="outlier-row"><span class="outlier-badge" style="background:${bg};color:${fg}">${gm.rating}</span>${gm.title}</div>`;
+    return `<div class="outlier-row"><span class="outlier-badge" style="background:${bg};color:${fg}">${gm.rating}</span>${escapeHtml(gm.title)}</div>`;
   }).join('');
   if (list.length > OUTLIER_DISPLAY_CAP) {
-    html += `<div class="empty-note">&hellip; und ${list.length - OUTLIER_DISPLAY_CAP} weitere (zeige die ${OUTLIER_DISPLAY_CAP} mit dem st&auml;rksten Ausschlag).</div>`;
+    html += `<div class="empty-note">${t('moreOutliers', list.length - OUTLIER_DISPLAY_CAP, OUTLIER_DISPLAY_CAP)}</div>`;
   }
   el.innerHTML = html;
 }
 
 // ---------- collection overview (right-hand sidebar, full lists) ----------
 function fillPlainList(listElId, countElId, titles) {
-  const sorted = [...titles].sort((a, b) => a.localeCompare(b, 'de'));
-  document.getElementById(countElId).textContent = `${sorted.length} Spiele`;
+  const sorted = [...titles].sort((a, b) => a.localeCompare(b, currentLang));
+  document.getElementById(countElId).textContent = `${sorted.length} ${t('gamesLabel')}`;
   const el = document.getElementById(listElId);
   el.innerHTML = sorted.length
-    ? sorted.map(t => `<div class="overview-row">${escapeHtml(t)}</div>`).join('')
-    : '<div class="empty-note">Keine Spiele in dieser Kategorie.</div>';
+    ? sorted.map(ti => `<div class="overview-row">${escapeHtml(ti)}</div>`).join('')
+    : `<div class="empty-note">${t('emptyCategory')}</div>`;
 }
 
 function fillRatedList(listElId, countElId, titlesMap, colorMap) {
   const entries = [];
   ratingOrder.forEach(key => {
-    (titlesMap[key] || []).slice().sort((a, b) => a.localeCompare(b, 'de'))
+    (titlesMap[key] || []).slice().sort((a, b) => a.localeCompare(b, currentLang))
       .forEach(title => entries.push({rating: key, title}));
   });
-  document.getElementById(countElId).textContent = `${entries.length} Spiele`;
+  document.getElementById(countElId).textContent = `${entries.length} ${t('gamesLabel')}`;
   const el = document.getElementById(listElId);
   el.innerHTML = entries.length
     ? entries.map(e => {
         const bg = e.rating === 'unrated' ? GREY : colorMap[e.rating];
         const fg = textColorFor(e.rating);
         const badgeText = e.rating === 'unrated' ? '&ndash;' : e.rating;
-        return `<div class="overview-row"><span class="overview-badge" style="background:${bg};color:${fg}" title="Ungewertet">${badgeText}</span>${escapeHtml(e.title)}</div>`;
+        return `<div class="overview-row"><span class="overview-badge" style="background:${bg};color:${fg}" title="${t('unratedLabel')}">${badgeText}</span>${escapeHtml(e.title)}</div>`;
       }).join('')
-    : '<div class="empty-note">Keine Spiele in dieser Kategorie.</div>';
+    : `<div class="empty-note">${t('emptyCategory')}</div>`;
 }
 
 function renderCollectionOverview(data) {
@@ -556,13 +687,13 @@ function renderDiagram(data) {
   document.getElementById('outliers').style.display = 'grid';
 
   const keptLowCutoff = data.outliers.keptLow.length ? Math.max(...data.outliers.keptLow.map(g => g.rating)) : null;
-  document.getElementById('kept-low-title').textContent = keptLowCutoff === null ? 'Behalten trotz niedrigem Rating' : `Behalten trotz Rating \u2264 ${keptLowCutoff}`;
-  document.getElementById('kept-low-sub').textContent = `${data.outliers.keptLow.length} Spiele \u00b7 die am niedrigsten bewerteten gespielten Spiele, die trotzdem nicht weitergewandert sind`;
+  document.getElementById('kept-low-title').textContent = keptLowCutoff === null ? t('outlierKeptTitleFallback') : t('outlierKeptTitle', keptLowCutoff);
+  document.getElementById('kept-low-sub').textContent = t('outlierKeptSub', data.outliers.keptLow.length);
   renderOutliers('kept-low-rows', data.outliers.keptLow, greenByRating);
 
   const soldHighCutoff = data.outliers.soldHigh.length ? Math.min(...data.outliers.soldHigh.map(g => g.rating)) : null;
-  document.getElementById('sold-high-title').textContent = soldHighCutoff === null ? 'Weitergewandert trotz hohem Rating' : `Weitergewandert trotz Rating \u2265 ${soldHighCutoff}`;
-  document.getElementById('sold-high-sub').textContent = `${data.outliers.soldHigh.length} Spiele \u00b7 die am h\u00f6chsten bewerteten gespielten Spiele, die trotzdem weitergewandert sind`;
+  document.getElementById('sold-high-title').textContent = soldHighCutoff === null ? t('outlierSoldTitleFallback') : t('outlierSoldTitle', soldHighCutoff);
+  document.getElementById('sold-high-sub').textContent = t('outlierSoldSub', data.outliers.soldHigh.length);
   renderOutliers('sold-high-rows', data.outliers.soldHigh, orangeByRating);
 
   const width = 1150, height = 648;
@@ -608,12 +739,12 @@ function renderDiagram(data) {
     return GREY;
   };
   const nameMap = {
-    'Ungespielt': 'Gesamte Sammlung',
-    'Gespielt': 'gespielt',
-    'Weitergewandert (ungespielt)': 'ungespielt weitergewandert',
-    'Behalten (ungespielt)': 'noch ungespielt',
-    'Behalten (gespielt)': 'gespielt und behalten',
-    'Weitergewandert (gespielt)': 'gespielt und weitergewandert'
+    'Ungespielt': t('legendGesamteSammlung'),
+    'Gespielt': t('nodeNameGespielt'),
+    'Weitergewandert (ungespielt)': t('legendUngespieltWeitergewandert'),
+    'Behalten (ungespielt)': t('legendNochUngespielt'),
+    'Behalten (gespielt)': t('legendGespieltBehalten'),
+    'Weitergewandert (gespielt)': t('legendGespieltWeitergewandert')
   };
   const displayName = name => nameMap[name] || name;
   const totalGames = totals.total;
@@ -658,13 +789,13 @@ function renderDiagram(data) {
     ratingData.push({
       rating: key, count, y0, y1, srcY0, srcY1,
       color, textColor: textColorFor(key), pct: count / playedTotal * 100,
-      cCount, bCount, titles: data.titlesByOutcome.gespielt[key] || [],
+      cCount, bCount,
       subCy0: y0, subCy1: y0 + cThick,
       subBy0: y0 + cThick, subBy1: y1
     });
   });
 
-  function buildSegments(node, counts, colorRamp, titlesMap) {
+  function buildSegments(node, counts, colorRamp) {
     const total = d3.sum(Object.values(counts));
     const nodeH = node.y1 - node.y0;
     const entries = [];
@@ -676,13 +807,13 @@ function renderDiagram(data) {
       const y0 = node.y0 + c, y1 = y0 + thick;
       c += thick;
       const color = key === 'unrated' ? GREY : colorRamp[key];
-      entries.push({rating: key, count, y0, y1, color, textColor: textColorFor(key), pct: count / total * 100, titles: (titlesMap && titlesMap[key]) || []});
+      entries.push({rating: key, count, y0, y1, color, textColor: textColorFor(key), pct: count / total * 100});
     });
     return entries;
   }
 
-  const ratingDataB = buildSegments(verkauftGNode, groupB, orangeByRating, data.titlesByOutcome.groupB);
-  const ratingDataC = buildSegments(behaltenGNode, groupC, greenByRating, data.titlesByOutcome.groupC);
+  const ratingDataB = buildSegments(verkauftGNode, groupB, orangeByRating);
+  const ratingDataC = buildSegments(behaltenGNode, groupC, greenByRating);
 
   function drawSegBlock(node, entries) {
     const cx = (node.x0 + node.x1) / 2;
@@ -698,7 +829,7 @@ function renderDiagram(data) {
       .attr('stroke', '#1B2921')
       .attr('stroke-width', 1);
     rects.append('title')
-      .text(d => `${labelFor(d.rating)}: ${d.count} Spiele (${d.pct.toFixed(1).replace('.', ',')}%)`);
+      .text(d => `${labelFor(d.rating)}: ${d.count} ${t('gamesLabel')} (${d.pct.toFixed(1).replace('.', ',')}%)`);
 
     const labelGroups = g.append('g')
       .selectAll('g')
@@ -754,22 +885,15 @@ function renderDiagram(data) {
       .attr('stroke-width', d => Math.max(1, heightAccessor(d)));
   }
 
-  // Preordered games: drawn as a seamless upward extension of the "Ungespielt"
-  // bar itself (same x, touching, no gap) - visually it reads as one taller
-  // bar, but the extra height is a separate rect and never feeds into the
-  // sankey graph, so totals/percentages stay exactly as computed above.
   let ungespieltVisualTop = ungespieltNode.y0;
   if (data.preorderedCount > 0) {
     const ky = (ungespieltNode.y1 - ungespieltNode.y0) / totals.total;
     const rawPreH = ky * data.preorderedCount;
-    const maxPreH = 100; // cap so extreme preordered:collection ratios can't push labels off-canvas
+    const maxPreH = 100;
     const preH = Math.max(1, Math.min(rawPreH, maxPreH));
     const isCapped = rawPreH > maxPreH;
     ungespieltVisualTop = ungespieltNode.y0 - preH;
 
-    // Flow length matches half the horizontal span of the yellow
-    // "Ungespielt -> Behalten (ungespielt)" band, computed dynamically so it
-    // stays correct if the layout ever changes.
     const yellowFlowLength = behaltenUNode.x0 - ungespieltNode.x1;
     const preFlowLength = yellowFlowLength / 2;
     const preCy = (ungespieltVisualTop + ungespieltNode.y0) / 2;
@@ -790,7 +914,7 @@ function renderDiagram(data) {
       .attr('width', ungespieltNode.x1 - ungespieltNode.x0).attr('height', preH)
       .attr('rx', 6)
       .attr('fill', PREORDER_GREY);
-    preRect.append('title').text(`Vorbestellt: ${data.preorderedCount} Spiele (nicht in den Prozentangaben oben enthalten)${isCapped ? ' \u2013 Balkenh\u00f6he gedeckelt' : ''}`);
+    preRect.append('title').text(t('vorbestelltTooltip', data.preorderedCount, isCapped));
   }
 
   drawBands(ratingData, ungespieltNode.x1, gespieltNode.x0,
@@ -845,12 +969,12 @@ function renderDiagram(data) {
 
   if (data.preorderedCount > 0) {
     const ug = g.append('g').attr('transform', `translate(${ungespieltNode.x0}, ${ungespieltVisualTop})`);
-    ug.append('text').attr('class', 'node-label').attr('text-anchor', 'start').attr('y', -34).text('Gesamte Sammlung');
+    ug.append('text').attr('class', 'node-label').attr('text-anchor', 'start').attr('y', -34).text(t('legendGesamteSammlung'));
     ug.append('text').attr('class', 'node-value').attr('text-anchor', 'start').attr('y', -20)
-      .text(`${ungespieltNode.value} Spiele \u00b7 ${(ungespieltNode.value / totalGames * 100).toFixed(1).replace('.', ',')}%`);
+      .text(`${ungespieltNode.value} ${t('gamesLabel')} \u00b7 ${(ungespieltNode.value / totalGames * 100).toFixed(1).replace('.', ',')}%`);
     ug.append('text').attr('class', 'node-value').attr('text-anchor', 'start').attr('y', -6)
       .attr('fill', '#6B7A6E')
-      .text(`+ ${data.preorderedCount} vorbestellt`);
+      .text(t('preorderedSuffix', data.preorderedCount));
   }
 
   const labels = g.append('g')
@@ -869,36 +993,82 @@ function renderDiagram(data) {
     .attr('class', 'node-value')
     .attr('text-anchor', d => labelAnchor(d).anchor)
     .attr('y', -7)
-    .text(d => `${d.value} Spiele \u00b7 ${(d.value / totalGames * 100).toFixed(1).replace('.', ',')}%`);
+    .text(d => `${d.value} ${t('gamesLabel')} \u00b7 ${(d.value / totalGames * 100).toFixed(1).replace('.', ',')}%`);
 }
+
+// ---------- static text (re-)application for the current language ----------
+function applyStaticLanguage() {
+  document.documentElement.lang = t('htmlLang');
+  document.title = t('pageTitle');
+
+  document.getElementById('eyebrowText').textContent = t('eyebrow');
+  const nameVal = document.getElementById('usernameInput').value.trim();
+  document.getElementById('mainHeading').textContent = nameVal ? t('headingWithName', nameVal) : t('headingDefault');
+  document.getElementById('subtitleText').textContent = t('subtitle');
+
+  document.getElementById('uploadLabelText').textContent = t('uploadLabel');
+  document.getElementById('uploadHintText').textContent = t('uploadHint');
+  document.getElementById('usernameInput').placeholder = t('usernamePlaceholder');
+
+  document.getElementById('modeToggleLabelText').textContent = t('modeToggleLabel');
+  document.querySelector('.mode-btn[data-mode="rating"]').textContent = t('modeBtnRating');
+  document.querySelector('.mode-btn[data-mode="numplays"]').textContent = t('modeBtnNumplays');
+  document.getElementById('modeToggleHint').textContent = currentPlayedMode === 'numplays' ? t('modeHintNumplays') : t('modeHintRating');
+
+  document.getElementById('exportPngBtn').textContent = t('exportBtn');
+  document.getElementById('placeholder').textContent = t('placeholderText');
+
+  document.getElementById('legendVorbestellt').textContent = t('legendVorbestellt');
+  document.getElementById('legendGesamteSammlung').textContent = t('legendGesamteSammlung');
+  document.getElementById('legendNochUngespielt').textContent = t('legendNochUngespielt');
+  document.getElementById('legendGespieltBehalten').textContent = t('legendGespieltBehalten');
+  document.getElementById('legendGespieltWeitergewandert').textContent = t('legendGespieltWeitergewandert');
+  document.getElementById('legendUngespieltWeitergewandert').textContent = t('legendUngespieltWeitergewandert');
+
+  document.getElementById('overviewTitleText').textContent = t('overviewTitle');
+  document.getElementById('ovTitleVorbestellt').textContent = t('legendVorbestellt');
+  document.getElementById('ovTitleUngespielt').textContent = t('legendNochUngespielt');
+  document.getElementById('ovTitleWeitergewandertU').textContent = t('legendUngespieltWeitergewandert');
+  document.getElementById('ovTitleBehaltenG').textContent = t('legendGespieltBehalten');
+  document.getElementById('ovTitleWeitergewandertG').textContent = t('legendGespieltWeitergewandert');
+}
+
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    if (this.classList.contains('active')) return;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    currentLang = this.dataset.lang;
+    applyStaticLanguage();
+    if (lastParsedRows) processAndRender(lastParsedRows);
+  });
+});
 
 // ---------- wire up the upload + played-mode toggle ----------
 let currentPlayedMode = 'rating';
 let lastParsedRows = null;
-
-const MODE_HINTS = {
-  rating: 'Ein Spiel gilt als gespielt, sobald du ihm ein pers&ouml;nliches Rating gegeben hast. Passend, wenn du Plays nicht konsequent auf BGG loggst.',
-  numplays: 'Ein Spiel gilt als gespielt, sobald mindestens 1 Play auf BGG erfasst ist (Spalte &bdquo;numplays&ldquo;). Passend, wenn du deine Plays &uuml;ber BGGs Play-Tracking pflegst.'
-};
+let lastRenderedData = null;
 
 function processAndRender(rows) {
   const summaryEl = document.getElementById('uploadSummary');
   const data = buildDataFromRows(rows, currentPlayedMode);
   if (data.totals.total === 0) {
     summaryEl.className = 'upload-summary error';
-    summaryEl.textContent = `${data.meta.rowCount} Zeilen gelesen, aber 0 relevante Spiele (own/prevowned, ohne Erweiterungen) gefunden - kein Diagramm möglich.`;
+    summaryEl.textContent = t('zeroRelevant', data.meta.rowCount);
+    lastRenderedData = null;
     return;
   }
   renderDiagram(data);
   renderCollectionOverview(data);
-  const modeLabel = currentPlayedMode === 'numplays' ? 'BGG-Play-Tracking' : 'Bewertung';
+  lastRenderedData = data;
+  const modeLabel = currentPlayedMode === 'numplays' ? t('modeBtnNumplays') : t('modeBtnRating');
   summaryEl.className = 'upload-summary';
-  summaryEl.textContent = `${data.meta.rowCount} Zeilen gelesen \u00b7 ${data.meta.skippedExpansion} Erweiterungen ausgeschlossen \u00b7 ${data.totals.total} relevante Spiele (own/prevowned) \u00b7 ${data.totals.playedTotal} davon gespielt (Methode: ${modeLabel}).`;
+  summaryEl.textContent = t('uploadSummary', data.meta.rowCount, data.meta.skippedExpansion, data.totals.total, data.totals.playedTotal, modeLabel);
 }
 
 document.getElementById('usernameInput').addEventListener('input', function () {
   const name = this.value.trim();
-  document.getElementById('mainHeading').textContent = name ? `${name}s Brettspiele` : 'Meine Brettspiele';
+  document.getElementById('mainHeading').textContent = name ? t('headingWithName', name) : t('headingDefault');
 });
 
 document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -907,7 +1077,7 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     this.classList.add('active');
     currentPlayedMode = this.dataset.mode;
-    document.getElementById('modeToggleHint').innerHTML = MODE_HINTS[currentPlayedMode];
+    document.getElementById('modeToggleHint').textContent = currentPlayedMode === 'numplays' ? t('modeHintNumplays') : t('modeHintRating');
     if (lastParsedRows) processAndRender(lastParsedRows);
   });
 });
@@ -917,7 +1087,7 @@ document.getElementById('csvInput').addEventListener('change', function (event) 
   if (!file) return;
   const summaryEl = document.getElementById('uploadSummary');
   summaryEl.className = 'upload-summary';
-  summaryEl.textContent = 'Lese Datei...';
+  summaryEl.textContent = t('reading');
 
   Papa.parse(file, {
     header: true,
@@ -926,7 +1096,7 @@ document.getElementById('csvInput').addEventListener('change', function (event) 
       const rows = results.data;
       if (!rows.length || !('own' in rows[0]) || !('prevowned' in rows[0])) {
         summaryEl.className = 'upload-summary error';
-        summaryEl.textContent = 'Diese Datei sieht nicht wie ein BGG-Collection-Export aus (Spalten "own"/"prevowned"/"rating" fehlen).';
+        summaryEl.textContent = t('notBggExport');
         return;
       }
       lastParsedRows = rows;
@@ -934,7 +1104,7 @@ document.getElementById('csvInput').addEventListener('change', function (event) 
     },
     error: function (err) {
       summaryEl.className = 'upload-summary error';
-      summaryEl.textContent = 'Konnte die CSV nicht lesen: ' + err.message;
+      summaryEl.textContent = t('csvReadError', err.message);
     }
   });
 });
@@ -948,7 +1118,7 @@ document.getElementById('exportPngBtn').addEventListener('click', async function
   const btn = this;
   const originalLabel = btn.textContent;
   btn.disabled = true;
-  btn.textContent = 'Exportiere...';
+  btn.textContent = t('exportBtnBusy');
 
   // Assemble an off-screen copy of heading + chart + outliers (skipping the
   // upload box and this toolbar/button) so html2canvas can rasterize exactly
@@ -974,6 +1144,22 @@ document.getElementById('exportPngBtn').addEventListener('click', async function
   outliersClone.style.marginTop = '20px';
   wrap.appendChild(outliersClone);
 
+  if (lastRenderedData && lastRenderedData.preorderedTitles.length) {
+    const titles = lastRenderedData.preorderedTitles.slice().sort((a, b) => a.localeCompare(b, currentLang));
+    const shown = titles.slice(0, OUTLIER_DISPLAY_CAP);
+    const preCard = document.createElement('div');
+    preCard.className = 'outlier-card';
+    preCard.style.marginTop = '20px';
+    let html = `<div class="outlier-title">${escapeHtml(t('preorderedCardTitle'))}</div>`;
+    html += `<div class="outlier-sub">${escapeHtml(t('preorderedCardSub', titles.length))}</div>`;
+    html += shown.map(ti => `<div class="overview-row">${escapeHtml(ti)}</div>`).join('');
+    if (titles.length > OUTLIER_DISPLAY_CAP) {
+      html += `<div class="empty-note">${escapeHtml(t('moreGeneric', titles.length - OUTLIER_DISPLAY_CAP))}</div>`;
+    }
+    preCard.innerHTML = html;
+    wrap.appendChild(preCard);
+  }
+
   // Avoid duplicate DOM ids while this off-screen copy exists alongside the original.
   wrap.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
 
@@ -993,13 +1179,15 @@ document.getElementById('exportPngBtn').addEventListener('click', async function
       }, 'image/png');
     });
   } catch (err) {
-    alert('PNG-Export fehlgeschlagen: ' + err.message);
+    alert(t('exportFailed', err.message));
   } finally {
     document.body.removeChild(wrap);
     btn.disabled = false;
     btn.textContent = originalLabel;
   }
 });
+
+applyStaticLanguage();
 </script>
 </body>
 </html>
