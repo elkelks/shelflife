@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Datenschutzerklärung</title>
+<style>
+:root{
+  --bg:#141F19;
+  --surface:#1B2921;
+  --border-soft:#2A392F;
+  --text:#ECE6D6;
+  --text-dim:#9CA79A;
+  --text-faint:#6B7A6E;
+  --gold:#D9A544;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);}
+.page{
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  padding:40px 32px 56px;
+  max-width:720px;
+  margin:0 auto;
+  line-height:1.6;
+}
+h1{
+  font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+  font-weight:400;
+  font-size:30px;
+  margin:0 0 8px;
+  color:var(--text);
+}
+.updated{font-size:12px;color:var(--text-faint);margin:0 0 24px;}
+h2{
+  font-size:15px;
+  font-weight:600;
+  margin:28px 0 8px;
+  color:var(--text);
+}
+p{margin:0 0 8px;color:var(--text-dim);font-size:14px;}
+ul{margin:0 0 8px;padding-left:20px;color:var(--text-dim);font-size:14px;}
+li{margin-bottom:2px;}
+a{color:var(--gold);}
+a:hover{text-decoration:none;}
+.intro{
+  background:var(--surface);
+  border:0.5px solid var(--border-soft);
+  border-radius:10px;
+  padding:16px 18px;
+  font-size:13px;
+  color:var(--text-dim);
+  margin-bottom:8px;
+}
+.back-link{display:inline-block;margin-top:36px;font-size:13px;color:var(--text-faint);text-decoration:none;}
+.back-link:hover{color:var(--text-dim);}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Datenschutzerklärung</h1>
+  <p class="updated">Stand: Juli 2026</p>
+
+  <div class="intro">
+    Kurzfassung: Diese Seite verarbeitet deine hochgeladene BGG-Sammlung ausschließlich lokal in deinem Browser.
+    Es gibt keinen eigenen Server, keine Datenbank, keine Cookies und kein Tracking. Die folgenden Abschnitte
+    beschreiben trotzdem die technisch unvermeidbare Datenverarbeitung, die beim Aufruf dieser Seite entsteht
+    (z.&nbsp;B. Logfiles beim Hosting-Anbieter).
+  </div>
+
+  <h2>Verantwortlicher</h2>
+  <p>
+    Lukas Gehring<br>
+    Bauvereinsweg 2<br>
+    21107 Hamburg<br>
+    Deutschland<br>
+    E-Mail: <a href="mailto:gehring@outlook.de">gehring@outlook.de</a>
+  </p>
+
+  <h2>Hosting</h2>
+  <p>
+    Diese Seite wird über GitHub Pages bereitgestellt, einen Dienst der GitHub, Inc./GitHub B.V. Beim Aufruf dieser
+    Seite verarbeitet GitHub als eigenständig Verantwortlicher automatisch sogenannte Server-Logfiles, die dein
+    Browser übermittelt, u.&nbsp;a.:
+  </p>
+  <ul>
+    <li>IP-Adresse</li>
+    <li>Datum und Uhrzeit der Anfrage</li>
+    <li>aufgerufene Datei/URL und Referrer-URL</li>
+    <li>verwendeter Browser und Betriebssystem</li>
+  </ul>
+  <p>
+    Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer zuverlässigen und sicheren
+    Auslieferung der Seite). Weitere Informationen:
+    <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub Privacy Statement</a>.
+  </p>
+
+  <h2>Eingebundene Skripte (Cloudflare CDN)</h2>
+  <p>
+    Für die Darstellung des Diagramms lädt diese Seite die JavaScript-Bibliotheken PapaParse, D3.js, d3-sankey und
+    html2canvas von einem Content-Delivery-Network (cdnjs.cloudflare.com, betrieben von Cloudflare, Inc.). Beim
+    Laden dieser Skripte übermittelt dein Browser automatisch deine IP-Adresse an Cloudflare, da dies technisch
+    für die Auslieferung erforderlich ist. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse
+    an einer performanten und zuverlässigen Bereitstellung der benötigten Bibliotheken). Weitere Informationen:
+    <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">Cloudflare Datenschutzerklärung</a>.
+  </p>
+
+  <h2>Verarbeitung deiner BGG-Sammlungsdaten</h2>
+  <p>
+    Wenn du eine CSV-Datei mit deiner BoardGameGeek-Sammlung hochlädst, wird diese Datei ausschließlich lokal in
+    deinem Browser verarbeitet (JavaScript, clientseitig). Es findet keine Übertragung der Datei oder ihres Inhalts
+    an einen Server statt - weder an den Betreiber dieser Seite noch an Dritte.
+  </p>
+  <p>
+    Optional kannst du zusätzlich deinen BGG-Nutzernamen eingeben, um dir einen Link zu deiner Sammlung auf
+    BoardGameGeek.com anzuzeigen. Auch dieser Nutzername verlässt deinen Browser nicht - außer wenn du den
+    erzeugten Link tatsächlich anklickst; dann gelten die Datenschutzbestimmungen von BoardGameGeek.com.
+  </p>
+
+  <h2>Lokale Speicherung (localStorage)</h2>
+  <p>
+    Damit du deine Sammlung, deinen Nutzernamen, die gewählte Sprache und den gewählten Auswertungsmodus nicht bei
+    jedem Besuch erneut eingeben musst, speichert diese Seite diese Angaben im localStorage deines Browsers. Diese
+    Daten verbleiben ausschließlich auf deinem Gerät und werden nicht an einen Server übertragen. Du kannst sie
+    jederzeit über die Einstellungen deines Browsers löschen (z.&nbsp;B. „Browserdaten löschen" bzw. „Website-Daten
+    löschen").
+  </p>
+
+  <h2>Keine Cookies, kein Tracking</h2>
+  <p>
+    Diese Seite setzt keine Cookies und verwendet keine Analyse-, Marketing- oder Tracking-Tools (z.&nbsp;B. Google
+    Analytics, Facebook Pixel o.&nbsp;Ä.).
+  </p>
+
+  <h2>Externe Links</h2>
+  <p>
+    Diese Seite verlinkt auf externe Angebote (z.&nbsp;B. BoardGameGeek.com, GitHub.com). Für die Datenverarbeitung
+    auf diesen Seiten sind ausschließlich deren jeweilige Betreiber verantwortlich.
+  </p>
+
+  <h2>Deine Rechte</h2>
+  <p>Dir stehen nach der DSGVO grundsätzlich folgende Rechte zu:</p>
+  <ul>
+    <li>Auskunft (Art. 15 DSGVO)</li>
+    <li>Berichtigung (Art. 16 DSGVO)</li>
+    <li>Löschung (Art. 17 DSGVO)</li>
+    <li>Einschränkung der Verarbeitung (Art. 18 DSGVO)</li>
+    <li>Datenübertragbarkeit (Art. 20 DSGVO)</li>
+    <li>Widerspruch (Art. 21 DSGVO)</li>
+  </ul>
+  <p>
+    Da diese Seite außerhalb der genannten technischen Logfiles keine personenbezogenen Daten durch den Betreiber
+    selbst erhebt oder speichert, laufen diese Rechte in der Praxis meist ins Leere - du kannst dich bei Fragen
+    dennoch jederzeit an die oben genannte Kontaktadresse wenden.
+  </p>
+  <p>
+    Außerdem hast du das Recht, dich bei einer Datenschutz-Aufsichtsbehörde zu beschweren (Art. 77 DSGVO), z.&nbsp;B.
+    beim Hamburgischen Beauftragten für Datenschutz und Informationsfreiheit.
+  </p>
+
+  <h2>Kontakt</h2>
+  <p>Bei Fragen zum Datenschutz erreichst du mich unter: <a href="mailto:gehring@outlook.de">gehring@outlook.de</a></p>
+
+  <a class="back-link" href="index.html">&larr; Zurück zur Startseite</a> &middot; <a class="back-link" href="impressum.html">Impressum</a>
+</div>
+</body>
+</html>
