@@ -614,7 +614,7 @@ function buildDataFromRows(rows, playedMode) {
   const titlesA = [], titlesD = [], preorderedTitles = [];
   let unratedB = 0, unratedC = 0;
   const allKept = [], allSold = [];
-  let skippedAmbiguous = 0, skippedIrrelevant = 0, skippedExpansion = 0;
+  let skippedIrrelevant = 0, skippedExpansion = 0;
   let preorderedCount = 0;
 
   rows.forEach(r => {
@@ -628,9 +628,11 @@ function buildDataFromRows(rows, playedMode) {
       preorderedTitles.push(r.objectname || t('unknownTitle'));
     }
 
+    // A game tagged as both owned and preowned is treated as owned - some BGG
+    // exports have been reported to double-tag games this way, and "owned"
+    // is the more likely intent.
     const own = String(r.own).trim() === '1';
-    const prevowned = String(r.prevowned).trim() === '1';
-    if (own && prevowned) { skippedAmbiguous++; return; }
+    const prevowned = String(r.prevowned).trim() === '1' && !own;
     if (!own && !prevowned) { skippedIrrelevant++; return; }
 
     const ratingRaw = (r.rating === undefined || r.rating === null) ? '' : String(r.rating).trim();
@@ -690,7 +692,7 @@ function buildDataFromRows(rows, playedMode) {
     outliers: {keptLow, soldHigh},
     preorderedCount,
     preorderedTitles,
-    meta: {skippedAmbiguous, skippedIrrelevant, skippedExpansion, rowCount: rows.length}
+    meta: {skippedIrrelevant, skippedExpansion, rowCount: rows.length}
   };
 }
 
