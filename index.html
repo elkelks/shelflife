@@ -123,12 +123,24 @@ input[type="file"]{
 .username-input::placeholder{color:var(--text-faint);}
 .bgg-collection-link{
   display:inline-block;
-  margin-top:8px;
-  font-size:12px;
-  color:var(--gold);
+  margin-top:10px;
+  padding:9px 16px;
+  font-size:14px;
+  font-weight:700;
+  color:var(--bg);
+  background:var(--gold);
+  border-radius:8px;
   text-decoration:none;
 }
-.bgg-collection-link:hover{text-decoration:underline;}
+.bgg-collection-link:hover{background:#e8b856;}
+.bgg-collection-hint-img{
+  display:block;
+  margin-top:10px;
+  max-width:100%;
+  height:auto;
+  border-radius:10px;
+  border:0.5px solid var(--border-soft);
+}
 .mode-toggle{margin-top:16px;padding-top:16px;border-top:0.5px solid var(--border-soft);}
 .mode-toggle-label{font-size:12px;font-weight:600;color:var(--text);display:block;margin-bottom:8px;}
 .mode-toggle-buttons{display:inline-flex;background:var(--bg);border:0.5px solid var(--border-soft);border-radius:8px;padding:2px;}
@@ -305,8 +317,9 @@ input[type="file"]{
 
   <div class="upload-card">
     <div class="username-intro" id="usernameIntroText"></div>
-    <input type="text" id="usernameInput" class="username-input">
+    <input type="text" id="usernameInput" class="username-input" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other">
     <a href="#" id="bggCollectionLink" class="bgg-collection-link" target="_blank" rel="noopener" style="display:none;"></a>
+    <img id="bggCollectionHintImg" class="bgg-collection-hint-img" src="bgg-collection-hint.png" alt="" style="display:none;">
 
     <div class="csv-upload-section">
       <label class="upload-label" for="csvInput" id="uploadLabelText"></label>
@@ -424,6 +437,7 @@ const I18N = {
     usernameIntro: 'Gib deinen BGG-Nutzernamen ein, um deine Sammlung auf BGG zu finden und als CSV zu exportieren:',
     usernamePlaceholder: 'BGG-Nutzername (optional)',
     bggCollectionLink: 'Sammlung auf BGG',
+    bggCollectionHintAlt: 'Screenshot der BGG-Sammlungsseite mit einem Pfeil auf den Download-Link "all"',
     uploadLabel: 'BGG-Sammlung hochladen (CSV)',
     uploadHint: 'Die Datei wird nur lokal im Browser verarbeitet und nirgendwo hochgeladen. Damit du sie nicht erneut hochladen musst, merkt sich dein Browser sie lokal \u2013 sie verl\u00e4sst dein Ger\u00e4t nie.',
     modeToggleLabel: '\u201eGespielt\u201c bestimmen anhand von:',
@@ -478,6 +492,7 @@ const I18N = {
     usernameIntro: 'Enter your BGG username to find your collection on BGG and export it as a CSV:',
     usernamePlaceholder: 'BGG username (optional)',
     bggCollectionLink: 'Collection on BGG',
+    bggCollectionHintAlt: 'Screenshot of the BGG collection page with an arrow pointing at the "all" download link',
     uploadLabel: 'Upload BGG collection (CSV)',
     uploadHint: 'The file is processed locally in your browser only and never uploaded. Your browser remembers it locally so you don\u2019t have to upload it again \u2013 it never leaves your device.',
     modeToggleLabel: 'Determine "played" using:',
@@ -1151,6 +1166,7 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
     this.classList.add('active');
     currentLang = this.dataset.lang;
     applyStaticLanguage();
+    saveToStorage(STORAGE_KEY_LANG, currentLang);
     if (lastParsedRows) processAndRender(lastParsedRows);
   });
 });
@@ -1159,6 +1175,7 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
 const STORAGE_KEY_CSV = 'shelflife.csvText';
 const STORAGE_KEY_USERNAME = 'shelflife.username';
 const STORAGE_KEY_MODE = 'shelflife.playedMode';
+const STORAGE_KEY_LANG = 'shelflife.lang';
 
 function saveToStorage(key, value) {
   try { localStorage.setItem(key, value); } catch (e) { /* storage unavailable/full - ignore */ }
@@ -1187,12 +1204,16 @@ function processAndRender(rows) {
 
 function updateBggCollectionLink(name) {
   const linkEl = document.getElementById('bggCollectionLink');
+  const hintImgEl = document.getElementById('bggCollectionHintImg');
   if (name) {
     linkEl.href = `https://boardgamegeek.com/collection/user/${encodeURIComponent(name)}`;
     linkEl.textContent = t('bggCollectionLink');
     linkEl.style.display = 'inline-block';
+    hintImgEl.alt = t('bggCollectionHintAlt');
+    hintImgEl.style.display = 'block';
   } else {
     linkEl.style.display = 'none';
+    hintImgEl.style.display = 'none';
   }
 }
 
@@ -1292,6 +1313,11 @@ function restoreFromStorage() {
     if (savedMode === 'numplays' || savedMode === 'rating') {
       currentPlayedMode = savedMode;
       document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === currentPlayedMode));
+    }
+    const savedLang = localStorage.getItem(STORAGE_KEY_LANG);
+    if (savedLang === 'de' || savedLang === 'en') {
+      currentLang = savedLang;
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
     }
   } catch (e) { /* storage unavailable - continue with defaults */ }
 }
