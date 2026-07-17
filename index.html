@@ -66,6 +66,12 @@ h1{
   border-radius:14px;
   padding:20px 22px;
   margin:20px 0 28px;
+  transition:border-color 0.15s,background 0.15s;
+}
+.upload-card.drag-active{
+  border-style:solid;
+  border-color:var(--gold);
+  background:#20301d;
 }
 .upload-label{
   display:inline-block;
@@ -139,6 +145,7 @@ input[type="file"]{
 .chart-toolbar{
   display:flex;
   justify-content:flex-end;
+  gap:8px;
   margin-bottom:12px;
 }
 .export-btn{
@@ -170,6 +177,20 @@ input[type="file"]{
 .legend span{display:inline-flex;align-items:center;gap:6px;}
 .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
 .grad-swatch{width:26px;height:9px;border-radius:3px;display:inline-block;background:linear-gradient(90deg,#C9E7C2,#154D1B);}
+/* Red and orange sit close together for red-green color blindness, so both get a
+   texture on top of their color (dots for red, diagonal hatch for orange) while
+   green stays plain - that alone makes every pairing distinguishable without color. */
+.pattern-red-dot{
+  background-color:#D64545;
+  background-image:radial-gradient(circle, rgba(20,31,25,0.6) 1px, transparent 1.3px);
+  background-size:5px 5px;
+}
+.pattern-orange-swatch{
+  background-image:linear-gradient(90deg,#F5D9B0,#7A3F0E), repeating-linear-gradient(45deg, rgba(20,31,25,0.35) 0, rgba(20,31,25,0.35) 2px, transparent 2px, transparent 6px);
+}
+.pattern-orange-badge{
+  background-image:repeating-linear-gradient(45deg, rgba(20,31,25,0.35) 0, rgba(20,31,25,0.35) 1.5px, transparent 1.5px, transparent 5px);
+}
 .node-label{font-size:13px;fill:var(--text);font-weight:600;}
 .node-value{font-size:12px;fill:var(--text-dim);}
 .outliers{
@@ -297,6 +318,7 @@ input[type="file"]{
     <div class="main-col">
       <div class="chart-wrap">
         <div class="chart-toolbar" id="chartToolbar" style="display:none;">
+          <button type="button" id="exportSvgBtn" class="export-btn"></button>
           <button type="button" id="exportPngBtn" class="export-btn"></button>
         </div>
         <svg id="sankey" width="100%" style="display:none;"></svg>
@@ -306,8 +328,8 @@ input[type="file"]{
           <span><span class="dot" style="background:#5B6B60"></span><span id="legendGesamteSammlung"></span></span>
           <span><span class="dot" style="background:#E3C23A"></span><span id="legendNochUngespielt"></span></span>
           <span><span class="grad-swatch"></span><span id="legendGespieltBehalten"></span></span>
-          <span><span class="grad-swatch" style="background:linear-gradient(90deg,#F5D9B0,#7A3F0E)"></span><span id="legendGespieltWeitergewandert"></span></span>
-          <span><span class="dot" style="background:#D64545"></span><span id="legendUngespieltWeitergewandert"></span></span>
+          <span><span class="grad-swatch pattern-orange-swatch"></span><span id="legendGespieltWeitergewandert"></span></span>
+          <span><span class="dot pattern-red-dot"></span><span id="legendUngespieltWeitergewandert"></span></span>
         </div>
       </div>
 
@@ -347,7 +369,7 @@ input[type="file"]{
 
         <div class="overview-section">
           <div class="overview-section-header">
-            <span class="overview-section-title"><span class="dot" style="background:#D64545"></span><span id="ovTitleWeitergewandertU"></span></span>
+            <span class="overview-section-title"><span class="dot pattern-red-dot"></span><span id="ovTitleWeitergewandertU"></span></span>
             <span class="overview-section-count" id="ov-weitergewandert-u-count"></span>
           </div>
           <div class="overview-list" id="ov-weitergewandert-u-list"></div>
@@ -363,7 +385,7 @@ input[type="file"]{
 
         <div class="overview-section">
           <div class="overview-section-header">
-            <span class="overview-section-title"><span class="grad-swatch" style="background:linear-gradient(90deg,#F5D9B0,#7A3F0E)"></span><span id="ovTitleWeitergewandertG"></span></span>
+            <span class="overview-section-title"><span class="grad-swatch pattern-orange-swatch"></span><span id="ovTitleWeitergewandertG"></span></span>
             <span class="overview-section-count" id="ov-weitergewandert-g-count"></span>
           </div>
           <div class="overview-list" id="ov-weitergewandert-g-list"></div>
@@ -397,6 +419,7 @@ const I18N = {
     modeHintRating: 'Ein Spiel gilt als gespielt, sobald du ihm ein pers\u00f6nliches Rating gegeben hast. Passend, wenn du Plays nicht konsequent auf BGG loggst.',
     modeHintNumplays: 'Ein Spiel gilt als gespielt, sobald mindestens 1 Play auf BGG erfasst ist (Spalte \u201enumplays\u201c). Passend, wenn du deine Plays \u00fcber BGGs Play-Tracking pflegst.',
     exportBtn: 'Als PNG exportieren',
+    exportSvgBtn: 'Als SVG exportieren',
     exportBtnBusy: 'Exportiere...',
     exportFailed: msg => `PNG-Export fehlgeschlagen: ${msg}`,
     placeholderText: 'Noch keine Datei geladen.',
@@ -449,6 +472,7 @@ const I18N = {
     modeHintRating: 'A game counts as played once you\u2019ve given it a personal rating. Good fit if you don\u2019t log plays on BGG consistently.',
     modeHintNumplays: 'A game counts as played once at least 1 play is logged on BGG (the "numplays" column). Good fit if you maintain your plays via BGG\u2019s play tracking.',
     exportBtn: 'Export as PNG',
+    exportSvgBtn: 'Export as SVG',
     exportBtnBusy: 'Exporting...',
     exportFailed: msg => `PNG export failed: ${msg}`,
     placeholderText: 'No file loaded yet.',
@@ -633,16 +657,17 @@ function buildDataFromRows(rows, playedMode) {
 // ---------- outlier cards ----------
 const OUTLIER_DISPLAY_CAP = 30;
 
-function renderOutliers(containerId, list, ramp) {
+function renderOutliers(containerId, list, ramp, patternClass) {
   const el = document.getElementById(containerId);
   if (!list.length) {
     el.innerHTML = `<div class="empty-note">${t('noOutliers')}</div>`;
     return;
   }
+  const badgeClass = patternClass ? `outlier-badge ${patternClass}` : 'outlier-badge';
   const shown = list.slice(0, OUTLIER_DISPLAY_CAP);
   let html = shown.map(gm => {
     const bg = ramp[gm.rating], fg = textColorFor(gm.rating);
-    return `<div class="outlier-row"><span class="outlier-badge" style="background:${bg};color:${fg}">${gm.rating}</span>${escapeHtml(gm.title)}</div>`;
+    return `<div class="outlier-row"><span class="${badgeClass}" style="background-color:${bg};color:${fg}">${gm.rating}</span>${escapeHtml(gm.title)}</div>`;
   }).join('');
   if (list.length > OUTLIER_DISPLAY_CAP) {
     html += `<div class="empty-note">${t('moreOutliers', list.length - OUTLIER_DISPLAY_CAP, OUTLIER_DISPLAY_CAP)}</div>`;
@@ -660,7 +685,7 @@ function fillPlainList(listElId, countElId, titles) {
     : `<div class="empty-note">${t('emptyCategory')}</div>`;
 }
 
-function fillRatedList(listElId, countElId, titlesMap, colorMap) {
+function fillRatedList(listElId, countElId, titlesMap, colorMap, patternClass) {
   const entries = [];
   ratingOrder.forEach(key => {
     (titlesMap[key] || []).slice().sort((a, b) => a.localeCompare(b, currentLang))
@@ -668,12 +693,13 @@ function fillRatedList(listElId, countElId, titlesMap, colorMap) {
   });
   document.getElementById(countElId).textContent = `${entries.length} ${t('gamesLabel')}`;
   const el = document.getElementById(listElId);
+  const badgeClass = patternClass ? `overview-badge ${patternClass}` : 'overview-badge';
   el.innerHTML = entries.length
     ? entries.map(e => {
         const bg = e.rating === 'unrated' ? GREY : colorMap[e.rating];
         const fg = textColorFor(e.rating);
         const badgeText = e.rating === 'unrated' ? '&ndash;' : e.rating;
-        return `<div class="overview-row"><span class="overview-badge" style="background:${bg};color:${fg}" title="${t('unratedLabel')}">${badgeText}</span>${escapeHtml(e.title)}</div>`;
+        return `<div class="overview-row"><span class="${badgeClass}" style="background-color:${bg};color:${fg}" title="${t('unratedLabel')}">${badgeText}</span>${escapeHtml(e.title)}</div>`;
       }).join('')
     : `<div class="empty-note">${t('emptyCategory')}</div>`;
 }
@@ -684,7 +710,7 @@ function renderCollectionOverview(data) {
   fillPlainList('ov-ungespielt-list', 'ov-ungespielt-count', data.titlesByOutcome.D);
   fillPlainList('ov-weitergewandert-u-list', 'ov-weitergewandert-u-count', data.titlesByOutcome.A);
   fillRatedList('ov-behalten-g-list', 'ov-behalten-g-count', data.titlesByOutcome.groupC, greenByRating);
-  fillRatedList('ov-weitergewandert-g-list', 'ov-weitergewandert-g-count', data.titlesByOutcome.groupB, orangeByRating);
+  fillRatedList('ov-weitergewandert-g-list', 'ov-weitergewandert-g-count', data.titlesByOutcome.groupB, orangeByRating, 'pattern-orange-badge');
 }
 
 // ---------- sankey ----------
@@ -705,7 +731,7 @@ function renderDiagram(data) {
   const soldHighCutoff = data.outliers.soldHigh.length ? Math.min(...data.outliers.soldHigh.map(g => g.rating)) : null;
   document.getElementById('sold-high-title').textContent = soldHighCutoff === null ? t('outlierSoldTitleFallback') : t('outlierSoldTitle', soldHighCutoff);
   document.getElementById('sold-high-sub').textContent = t('outlierSoldSub', data.outliers.soldHigh.length);
-  renderOutliers('sold-high-rows', data.outliers.soldHigh, orangeByRating);
+  renderOutliers('sold-high-rows', data.outliers.soldHigh, orangeByRating, 'pattern-orange-badge');
 
   const width = 1150, height = 648;
   const margin = {top: 150, right: 24, bottom: 24, left: 214};
@@ -742,6 +768,29 @@ function renderDiagram(data) {
   const svgEl = d3.select('#sankey');
   svgEl.selectAll('*').remove();
   svgEl.attr('viewBox', `0 0 ${width} ${height}`);
+
+  // Red and orange are the two colors closest together for red-green color
+  // blindness, so both get a texture pattern (dots for red, diagonal hatch for
+  // orange) layered on top of their solid nodes/segments. Green stays plain -
+  // that alone makes every pairing distinguishable without relying on hue.
+  const defs = svgEl.append('defs');
+  defs.append('pattern')
+    .attr('id', 'redDotsPattern')
+    .attr('width', 6).attr('height', 6)
+    .attr('patternUnits', 'userSpaceOnUse')
+    .append('circle')
+      .attr('cx', 3).attr('cy', 3).attr('r', 1.1)
+      .attr('fill', 'rgba(20,31,25,0.6)');
+  defs.append('pattern')
+    .attr('id', 'orangeHatchPattern')
+    .attr('width', 6).attr('height', 6)
+    .attr('patternUnits', 'userSpaceOnUse')
+    .attr('patternTransform', 'rotate(45)')
+    .append('line')
+      .attr('x1', 0).attr('y1', 0).attr('x2', 0).attr('y2', 6)
+      .attr('stroke', 'rgba(20,31,25,0.45)')
+      .attr('stroke-width', 2);
+
   const g = svgEl.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
   const nodeColor = name => {
@@ -826,7 +875,7 @@ function renderDiagram(data) {
   const ratingDataB = buildSegments(verkauftGNode, groupB, orangeByRating);
   const ratingDataC = buildSegments(behaltenGNode, groupC, greenByRating);
 
-  function drawSegBlock(node, entries) {
+  function drawSegBlock(node, entries, patternId) {
     const cx = (node.x0 + node.x1) / 2;
     const rects = g.append('g')
       .selectAll('rect')
@@ -841,6 +890,19 @@ function renderDiagram(data) {
       .attr('stroke-width', 1);
     rects.append('title')
       .text(d => `${labelFor(d.rating)}: ${d.count} ${t('gamesLabel')} (${d.pct.toFixed(1).replace('.', ',')}%)`);
+
+    if (patternId) {
+      g.append('g')
+        .selectAll('rect')
+        .data(entries)
+        .join('rect')
+        .attr('x', node.x0)
+        .attr('y', d => d.y0)
+        .attr('width', node.x1 - node.x0)
+        .attr('height', d => d.y1 - d.y0)
+        .attr('fill', `url(#${patternId})`)
+        .attr('pointer-events', 'none');
+    }
 
     const labelGroups = g.append('g')
       .selectAll('g')
@@ -881,8 +943,8 @@ function renderDiagram(data) {
 
   const bandCurve = d3.linkHorizontal().x(p => p.x).y(p => p.y);
 
-  function drawBands(dataset, sx, ex, syAccessor, eyAccessor, heightAccessor) {
-    g.append('g')
+  function drawBands(dataset, sx, ex, syAccessor, eyAccessor, heightAccessor, titleAccessor) {
+    const paths = g.append('g')
       .attr('fill', 'none')
       .selectAll('path')
       .data(dataset)
@@ -894,6 +956,9 @@ function renderDiagram(data) {
       .attr('stroke', d => d.color)
       .attr('stroke-opacity', 0.9)
       .attr('stroke-width', d => Math.max(1, heightAccessor(d)));
+    if (titleAccessor) {
+      paths.append('title').text(titleAccessor);
+    }
   }
 
   let ungespieltVisualTop = ungespieltNode.y0;
@@ -909,7 +974,7 @@ function renderDiagram(data) {
     const preFlowLength = yellowFlowLength / 2;
     const preCy = (ungespieltVisualTop + ungespieltNode.y0) / 2;
 
-    g.append('g')
+    const preBandPath = g.append('g')
       .attr('fill', 'none')
       .append('path')
       .attr('d', bandCurve({
@@ -919,6 +984,7 @@ function renderDiagram(data) {
       .attr('stroke', PREORDER_GREY)
       .attr('stroke-opacity', 0.32)
       .attr('stroke-width', preH);
+    preBandPath.append('title').text(t('vorbestelltTooltip', data.preorderedCount, isCapped));
 
     const preRect = g.append('rect')
       .attr('x', ungespieltNode.x0).attr('y', ungespieltVisualTop)
@@ -929,23 +995,26 @@ function renderDiagram(data) {
   }
 
   drawBands(ratingData, ungespieltNode.x1, gespieltNode.x0,
-    d => (d.srcY0 + d.srcY1) / 2, d => (d.y0 + d.y1) / 2, d => d.y1 - d.y0);
+    d => (d.srcY0 + d.srcY1) / 2, d => (d.y0 + d.y1) / 2, d => d.y1 - d.y0,
+    d => `${labelFor(d.rating)}: ${d.count} ${t('gamesLabel')} (${d.pct.toFixed(1).replace('.', ',')}%)`);
 
   const toBehalten = ratingData.filter(d => d.cCount > 0).map(d => {
     const target = ratingDataC.find(e => e.rating === d.rating);
     const color = d.rating === 'unrated' ? GREY : greenByRating[d.rating];
-    return {color, _srcY: (d.subCy0 + d.subCy1) / 2, _tgtY: (target.y0 + target.y1) / 2, _h: d.subCy1 - d.subCy0};
+    return {color, rating: d.rating, count: d.cCount, _srcY: (d.subCy0 + d.subCy1) / 2, _tgtY: (target.y0 + target.y1) / 2, _h: d.subCy1 - d.subCy0};
   });
-  drawBands(toBehalten, gespieltNode.x1, behaltenGNode.x0, d => d._srcY, d => d._tgtY, d => d._h);
+  drawBands(toBehalten, gespieltNode.x1, behaltenGNode.x0, d => d._srcY, d => d._tgtY, d => d._h,
+    d => `${labelFor(d.rating)}: ${d.count} ${t('gamesLabel')} · ${t('legendGespieltBehalten')}`);
 
   const toVerkauft = ratingData.filter(d => d.bCount > 0).map(d => {
     const target = ratingDataB.find(e => e.rating === d.rating);
     const color = d.rating === 'unrated' ? GREY : orangeByRating[d.rating];
-    return {color, _srcY: (d.subBy0 + d.subBy1) / 2, _tgtY: (target.y0 + target.y1) / 2, _h: d.subBy1 - d.subBy0};
+    return {color, rating: d.rating, count: d.bCount, _srcY: (d.subBy0 + d.subBy1) / 2, _tgtY: (target.y0 + target.y1) / 2, _h: d.subBy1 - d.subBy0};
   });
-  drawBands(toVerkauft, gespieltNode.x1, verkauftGNode.x0, d => d._srcY, d => d._tgtY, d => d._h);
+  drawBands(toVerkauft, gespieltNode.x1, verkauftGNode.x0, d => d._srcY, d => d._tgtY, d => d._h,
+    d => `${labelFor(d.rating)}: ${d.count} ${t('gamesLabel')} · ${t('legendGespieltWeitergewandert')}`);
 
-  g.append('g')
+  const generalLinkPaths = g.append('g')
     .attr('fill', 'none')
     .selectAll('path')
     .data(linksToDraw)
@@ -954,6 +1023,8 @@ function renderDiagram(data) {
     .attr('stroke', linkColor)
     .attr('stroke-opacity', 0.32)
     .attr('stroke-width', d => Math.max(1, d.width));
+  generalLinkPaths.append('title')
+    .text(d => `${displayName(d.target.name)}: ${d.value} ${t('gamesLabel')} (${(d.value / totalGames * 100).toFixed(1).replace('.', ',')}%)`);
 
   g.append('g')
     .selectAll('rect')
@@ -968,8 +1039,20 @@ function renderDiagram(data) {
     .attr('stroke', '#0000')
     .attr('stroke-width', 0.5);
 
+  g.append('g')
+    .selectAll('rect')
+    .data(graph.nodes.filter(n => n.name === 'Weitergewandert (ungespielt)'))
+    .join('rect')
+    .attr('x', d => d.x0)
+    .attr('y', d => d.y0)
+    .attr('width', d => d.x1 - d.x0)
+    .attr('height', d => d.y1 - d.y0)
+    .attr('rx', 3)
+    .attr('fill', 'url(#redDotsPattern)')
+    .attr('pointer-events', 'none');
+
   drawSegBlock(gespieltNode, ratingData);
-  drawSegBlock(verkauftGNode, ratingDataB);
+  drawSegBlock(verkauftGNode, ratingDataB, 'orangeHatchPattern');
   drawSegBlock(behaltenGNode, ratingDataC);
 
   const labelAnchor = d => {
@@ -1028,6 +1111,7 @@ function applyStaticLanguage() {
   document.getElementById('modeToggleHint').textContent = currentPlayedMode === 'numplays' ? t('modeHintNumplays') : t('modeHintRating');
 
   document.getElementById('exportPngBtn').textContent = t('exportBtn');
+  document.getElementById('exportSvgBtn').textContent = t('exportSvgBtn');
   document.getElementById('placeholder').textContent = t('placeholderText');
 
   document.getElementById('legendVorbestellt').textContent = t('legendVorbestellt');
@@ -1057,6 +1141,14 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
 });
 
 // ---------- wire up the upload + played-mode toggle ----------
+const STORAGE_KEY_CSV = 'shelflife.csvText';
+const STORAGE_KEY_USERNAME = 'shelflife.username';
+const STORAGE_KEY_MODE = 'shelflife.playedMode';
+
+function saveToStorage(key, value) {
+  try { localStorage.setItem(key, value); } catch (e) { /* storage unavailable/full - ignore */ }
+}
+
 let currentPlayedMode = 'rating';
 let lastParsedRows = null;
 let lastRenderedData = null;
@@ -1093,6 +1185,7 @@ document.getElementById('usernameInput').addEventListener('input', function () {
   const name = this.value.trim();
   document.getElementById('mainHeading').textContent = name ? t('headingWithName', name) : t('headingDefault');
   updateBggCollectionLink(name);
+  saveToStorage(STORAGE_KEY_USERNAME, name);
 });
 
 document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -1102,18 +1195,19 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
     this.classList.add('active');
     currentPlayedMode = this.dataset.mode;
     document.getElementById('modeToggleHint').textContent = currentPlayedMode === 'numplays' ? t('modeHintNumplays') : t('modeHintRating');
+    saveToStorage(STORAGE_KEY_MODE, currentPlayedMode);
     if (lastParsedRows) processAndRender(lastParsedRows);
   });
 });
 
-document.getElementById('csvInput').addEventListener('change', function (event) {
-  const file = event.target.files[0];
-  if (!file) return;
+// Shared by the file picker, drag-and-drop, and restoring a saved session, so
+// all three paths go through the same parsing/validation/persistence logic.
+function loadCsvText(text, persist) {
   const summaryEl = document.getElementById('uploadSummary');
   summaryEl.className = 'upload-summary';
   summaryEl.textContent = t('reading');
 
-  Papa.parse(file, {
+  Papa.parse(text, {
     header: true,
     skipEmptyLines: true,
     complete: function (results) {
@@ -1125,12 +1219,110 @@ document.getElementById('csvInput').addEventListener('change', function (event) 
       }
       lastParsedRows = rows;
       processAndRender(rows);
+      if (persist) saveToStorage(STORAGE_KEY_CSV, text);
     },
     error: function (err) {
       summaryEl.className = 'upload-summary error';
       summaryEl.textContent = t('csvReadError', err.message);
     }
   });
+}
+
+function loadCsvFile(file) {
+  if (!file) return;
+  file.text()
+    .then(text => loadCsvText(text, true))
+    .catch(err => {
+      const summaryEl = document.getElementById('uploadSummary');
+      summaryEl.className = 'upload-summary error';
+      summaryEl.textContent = t('csvReadError', err.message);
+    });
+}
+
+document.getElementById('csvInput').addEventListener('change', function (event) {
+  loadCsvFile(event.target.files[0]);
+});
+
+// ---------- drag-and-drop CSV upload ----------
+const uploadCard = document.querySelector('.upload-card');
+let dragCounter = 0;
+uploadCard.addEventListener('dragenter', function (e) {
+  e.preventDefault();
+  dragCounter++;
+  uploadCard.classList.add('drag-active');
+});
+uploadCard.addEventListener('dragover', function (e) {
+  e.preventDefault();
+});
+uploadCard.addEventListener('dragleave', function (e) {
+  e.preventDefault();
+  dragCounter = Math.max(0, dragCounter - 1);
+  if (dragCounter === 0) uploadCard.classList.remove('drag-active');
+});
+uploadCard.addEventListener('drop', function (e) {
+  e.preventDefault();
+  dragCounter = 0;
+  uploadCard.classList.remove('drag-active');
+  loadCsvFile(e.dataTransfer.files && e.dataTransfer.files[0]);
+});
+
+// ---------- restore a previous session ----------
+function restoreFromStorage() {
+  try {
+    const savedUsername = localStorage.getItem(STORAGE_KEY_USERNAME);
+    if (savedUsername) {
+      document.getElementById('usernameInput').value = savedUsername;
+    }
+    const savedMode = localStorage.getItem(STORAGE_KEY_MODE);
+    if (savedMode === 'numplays' || savedMode === 'rating') {
+      currentPlayedMode = savedMode;
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === currentPlayedMode));
+    }
+  } catch (e) { /* storage unavailable - continue with defaults */ }
+}
+
+function restoreSavedCsv() {
+  try {
+    const savedCsv = localStorage.getItem(STORAGE_KEY_CSV);
+    if (savedCsv) loadCsvText(savedCsv, false);
+  } catch (e) { /* storage unavailable - nothing to restore */ }
+}
+
+// ---------- SVG export ----------
+// Exports the diagram itself (not the surrounding page) as a standalone SVG
+// file. The <defs> patterns and any inline attributes are cloned as-is, but
+// classed styles (.node-label/.node-value) only exist in the page's <style>
+// block, so they're inlined here too, otherwise a viewer opening the file on
+// its own would see unstyled text.
+document.getElementById('exportSvgBtn').addEventListener('click', function () {
+  const svgEl = document.getElementById('sankey');
+  const clone = svgEl.cloneNode(true);
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  clone.setAttribute('width', '1150');
+  clone.setAttribute('height', '648');
+  clone.removeAttribute('style');
+
+  const styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+  styleEl.textContent = '.node-label{font-size:13px;fill:#ECE6D6;font-weight:600;} .node-value{font-size:12px;fill:#9CA79A;} text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}';
+  clone.insertBefore(styleEl, clone.firstChild);
+
+  const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  bgRect.setAttribute('x', '0');
+  bgRect.setAttribute('y', '0');
+  bgRect.setAttribute('width', '1150');
+  bgRect.setAttribute('height', '648');
+  bgRect.setAttribute('fill', '#1B2921');
+  clone.insertBefore(bgRect, clone.firstChild);
+
+  const source = new XMLSerializer().serializeToString(clone);
+  const blob = new Blob([source], {type: 'image/svg+xml;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'spielesammlung-sankey.svg';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
 });
 
 // ---------- PNG export ----------
@@ -1211,7 +1403,9 @@ document.getElementById('exportPngBtn').addEventListener('click', async function
   }
 });
 
+restoreFromStorage();
 applyStaticLanguage();
+restoreSavedCsv();
 </script>
 </body>
 </html>
