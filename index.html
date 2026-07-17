@@ -42,12 +42,6 @@ h1{
   margin:0 0 10px;
   color:var(--text);
 }
-.subtitle{
-  font-size:14px;
-  color:var(--text-dim);
-  max-width:640px;
-  line-height:1.6;
-}
 .lang-toggle{display:inline-flex;background:var(--surface);border:0.5px solid var(--border-soft);border-radius:8px;padding:2px;flex-shrink:0;}
 .lang-btn{
   background:none;
@@ -213,6 +207,12 @@ input[type="file"]{
 .pattern-orange-badge{
   background-image:repeating-linear-gradient(45deg, rgba(20,31,25,0.35) 0, rgba(20,31,25,0.35) 1.5px, transparent 1.5px, transparent 5px);
 }
+/* If a category has zero rated games, its gradient swatch would be misleading -
+   show it as plain grey (matching the "unrated" color used elsewhere) instead. */
+.grad-swatch.swatch-all-unrated{
+  background:var(--grey-node) !important;
+  background-image:none !important;
+}
 .node-label{font-size:13px;fill:var(--text);font-weight:600;}
 .node-value{font-size:12px;fill:var(--text-dim);}
 .outliers{
@@ -299,6 +299,16 @@ input[type="file"]{
 @media (max-width:640px){
   .outliers{grid-template-columns:1fr;}
 }
+.footer{
+  margin-top:32px;
+  padding-top:16px;
+  border-top:0.5px solid var(--border-soft);
+  font-size:12px;
+  color:var(--text-faint);
+  text-align:center;
+}
+.footer a{color:var(--text-faint);text-decoration:underline;}
+.footer a:hover{color:var(--text-dim);}
 </style>
 </head>
 <body>
@@ -314,7 +324,6 @@ input[type="file"]{
         <button type="button" class="lang-btn" data-lang="en">EN</button>
       </div>
     </div>
-    <div class="subtitle" id="subtitleText"></div>
   </div>
 
   <div class="upload-card">
@@ -354,8 +363,8 @@ input[type="file"]{
           <span><span class="dot" style="background:#8A9A8F"></span><span id="legendVorbestellt"></span></span>
           <span><span class="dot" style="background:#5B6B60"></span><span id="legendGesamteSammlung"></span></span>
           <span><span class="dot" style="background:#E3C23A"></span><span id="legendNochUngespielt"></span></span>
-          <span><span class="grad-swatch"></span><span id="legendGespieltBehalten"></span></span>
-          <span><span class="grad-swatch pattern-orange-swatch"></span><span id="legendGespieltWeitergewandert"></span></span>
+          <span><span class="grad-swatch" id="legendSwatchBehalten"></span><span id="legendGespieltBehalten"></span></span>
+          <span><span class="grad-swatch pattern-orange-swatch" id="legendSwatchWeitergewandert"></span><span id="legendGespieltWeitergewandert"></span></span>
           <span><span class="dot pattern-red-dot"></span><span id="legendUngespieltWeitergewandert"></span></span>
         </div>
       </div>
@@ -396,7 +405,7 @@ input[type="file"]{
 
         <div class="overview-section">
           <div class="overview-section-header">
-            <span class="overview-section-title"><span class="grad-swatch"></span><span id="ovTitleBehaltenG"></span></span>
+            <span class="overview-section-title"><span class="grad-swatch" id="ovSwatchBehalten"></span><span id="ovTitleBehaltenG"></span></span>
             <span class="overview-section-count" id="ov-behalten-g-count"></span>
           </div>
           <div class="overview-list" id="ov-behalten-g-list"></div>
@@ -404,7 +413,7 @@ input[type="file"]{
 
         <div class="overview-section">
           <div class="overview-section-header">
-            <span class="overview-section-title"><span class="grad-swatch pattern-orange-swatch"></span><span id="ovTitleWeitergewandertG"></span></span>
+            <span class="overview-section-title"><span class="grad-swatch pattern-orange-swatch" id="ovSwatchWeitergewandert"></span><span id="ovTitleWeitergewandertG"></span></span>
             <span class="overview-section-count" id="ov-weitergewandert-g-count"></span>
           </div>
           <div class="overview-list" id="ov-weitergewandert-g-list"></div>
@@ -420,6 +429,8 @@ input[type="file"]{
       </div>
     </div>
   </div>
+
+  <div class="footer">vibecoded by elkselk. Do with this whatever you want. · <a href="https://github.com/elkelks/shelflife" target="_blank" rel="noopener">GitHub</a></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.5.4/papaparse.min.js"></script>
@@ -435,7 +446,6 @@ const I18N = {
     eyebrow: 'Von der Vorbestellung bis zum Verkauf',
     headingDefault: 'Meine Brettspiele',
     headingWithName: name => `${name}s Brettspiele`,
-    subtitle: 'Farbe zeigt den Pfad: Grau = Vorbestellt, Gelb = noch ungespielt, Gr\u00fcn = gespielt und behalten, Orange = gespielt und weitergewandert, Rot = ungespielt weitergewandert.',
     usernameIntro: 'Gib deinen BGG-Nutzernamen ein, um deine Sammlung auf BGG zu finden und als CSV zu exportieren:',
     usernamePlaceholder: 'BGG-Nutzername (optional)',
     bggCollectionLink: 'Sammlung auf BGG',
@@ -490,7 +500,6 @@ const I18N = {
     eyebrow: 'From preorder to sale',
     headingDefault: 'My Board Games',
     headingWithName: name => `${name}\u2019s Board Games`,
-    subtitle: 'Color shows the path: Gray = preordered, Yellow = not played yet, Green = played and kept, Orange = played and moved on, Red = never played, moved on.',
     usernameIntro: 'Enter your BGG username to find your collection on BGG and export it as a CSV:',
     usernamePlaceholder: 'BGG username (optional)',
     bggCollectionLink: 'Collection on BGG',
@@ -742,6 +751,19 @@ function renderCollectionOverview(data) {
   fillPlainList('ov-weitergewandert-u-list', 'ov-weitergewandert-u-count', data.titlesByOutcome.A);
   fillRatedList('ov-behalten-g-list', 'ov-behalten-g-count', data.titlesByOutcome.groupC, greenByRating);
   fillRatedList('ov-weitergewandert-g-list', 'ov-weitergewandert-g-count', data.titlesByOutcome.groupB, orangeByRating, 'pattern-orange-badge');
+}
+
+// If a category has zero rated games, its gradient swatch (legend + overview
+// header) would misleadingly imply ratings exist - show plain grey instead.
+function updateRatingSwatchColors(data) {
+  const hasRatedC = Object.keys(data.ratingByOutcome.groupC).length > 0;
+  const hasRatedB = Object.keys(data.ratingByOutcome.groupB).length > 0;
+  ['legendSwatchBehalten', 'ovSwatchBehalten'].forEach(id => {
+    document.getElementById(id).classList.toggle('swatch-all-unrated', !hasRatedC);
+  });
+  ['legendSwatchWeitergewandert', 'ovSwatchWeitergewandert'].forEach(id => {
+    document.getElementById(id).classList.toggle('swatch-all-unrated', !hasRatedB);
+  });
 }
 
 // ---------- sankey ----------
@@ -1129,7 +1151,6 @@ function applyStaticLanguage() {
   document.getElementById('eyebrowText').textContent = t('eyebrow');
   const nameVal = document.getElementById('usernameInput').value.trim();
   document.getElementById('mainHeading').textContent = nameVal ? t('headingWithName', nameVal) : t('headingDefault');
-  document.getElementById('subtitleText').textContent = t('subtitle');
   updateBggCollectionLink(nameVal);
 
   document.getElementById('usernameIntroText').textContent = t('usernameIntro');
@@ -1198,6 +1219,7 @@ function processAndRender(rows) {
   }
   renderDiagram(data);
   renderCollectionOverview(data);
+  updateRatingSwatchColors(data);
   lastRenderedData = data;
   const modeLabel = currentPlayedMode === 'numplays' ? t('modeBtnNumplays') : t('modeBtnRating');
   summaryEl.className = 'upload-summary';
